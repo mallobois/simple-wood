@@ -69,7 +69,7 @@ def init_sheet_headers():
         'Tronçons': ['Date', 'Heure', 'Série', 'Numéro', 'Code complet', 'Copies', 'Opérateur'],
         'Paquets': ['Date', 'Heure', 'Série', 'Numéro', 'Essence', 'Qualité', 'Épaisseur', 'Largeur', 'Longueur', 'Volume', 'Copies', 'Opérateur'],
         'Colis': ['Date', 'Heure', 'Série', 'Numéro', 'Client', 'Référence', 'Destination', 'Poids', 'Volume', 'Nb paquets', 'Copies', 'Opérateur'],
-        'Utilisateurs': ['Identifiant', 'Mot de passe', 'Nom', 'Droits']
+        'Utilisateurs': ['Identifiant', 'Mot de passe', 'Nom', 'Initiales', 'Droits']
     }
     
     for sheet_name, header_row in headers.items():
@@ -112,8 +112,8 @@ def log_to_sheets(sheet_name: str, data: list):
 
 def get_users_from_sheets() -> dict:
     default_users = {
-        'admin': {'password': 'admin', 'nom': 'Administrateur', 'droits': 'admin'},
-        'operateur': {'password': '1234', 'nom': 'Opérateur', 'droits': 'operateur'},
+        'admin': {'password': 'admin', 'nom': 'Administrateur', 'initiales': 'AD', 'droits': 'admin'},
+        'operateur': {'password': '1234', 'nom': 'Opérateur', 'initiales': 'OP', 'droits': 'operateur'},
     }
     
     if spreadsheet is None:
@@ -129,9 +129,11 @@ def get_users_from_sheets() -> dict:
         for row in records:
             identifiant = row.get('Identifiant', '')
             if identifiant:
+                nom = row.get('Nom', identifiant)
                 users[identifiant] = {
                     'password': str(row.get('Mot de passe', '')),
-                    'nom': row.get('Nom', identifiant),
+                    'nom': nom,
+                    'initiales': row.get('Initiales', nom[:2].upper()),
                     'droits': row.get('Droits', 'operateur')
                 }
         return users if users else default_users
@@ -376,17 +378,10 @@ def api_get_users():
     users = get_users_from_sheets()
     result = []
     for uid, data in users.items():
-        nom = data.get('nom', uid)
-        # Générer les initiales
-        parts = nom.split()
-        if len(parts) >= 2:
-            initiales = parts[0][0].upper() + parts[-1][0].upper()
-        else:
-            initiales = nom[:2].upper()
         result.append({
             'id': uid,
-            'nom': nom,
-            'initiales': initiales
+            'nom': data.get('nom', uid),
+            'initiales': data.get('initiales', uid[:2].upper())
         })
     return jsonify(result)
 
