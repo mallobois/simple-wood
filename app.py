@@ -297,7 +297,7 @@ def init_users_sheet():
 
 
 def init_reference_tables():
-    """Synchronise les tables de référence (ajoute les entrées manquantes)"""
+    """Synchronise les tables de référence (ajoute les entrées manquantes en batch)"""
     if spreadsheet is None:
         return
     
@@ -306,48 +306,60 @@ def init_reference_tables():
     # Essences - clé unique: code
     table_cfg = next((t for t in config.get('tables', []) if t['id'] == 'essences'), None)
     if table_cfg:
-        get_or_create_table_sheet('essences', table_cfg)
-        existing = get_table_values('essences')
-        existing_codes = {str(e.get('Code', '')).upper() for e in existing}
-        added = 0
-        for item in ESSENCES_DATA:
-            if item['code'].upper() not in existing_codes:
-                add_table_value('essences', table_cfg, item)
-                added += 1
-        if added:
-            print(f"  → Essences: {added} ajoutée(s)")
+        sheet = get_or_create_table_sheet('essences', table_cfg)
+        if sheet:
+            existing = sheet.get_all_records()
+            existing_codes = {str(e.get('Code', '')).upper() for e in existing}
+            colonnes = table_cfg.get('colonnes', [])
+            rows_to_add = []
+            next_id = len(existing) + 1
+            for item in ESSENCES_DATA:
+                if item['code'].upper() not in existing_codes:
+                    rows_to_add.append([next_id] + [item.get(col['id'], '') for col in colonnes])
+                    next_id += 1
+            if rows_to_add:
+                sheet.append_rows(rows_to_add)
+                print(f"  → Essences: {len(rows_to_add)} ajoutée(s)")
     
     # Produits - clé unique: code
     table_cfg = next((t for t in config.get('tables', []) if t['id'] == 'produits'), None)
     if table_cfg:
-        get_or_create_table_sheet('produits', table_cfg)
-        existing = get_table_values('produits')
-        existing_codes = {str(e.get('Code', '')).upper() for e in existing}
-        added = 0
-        for item in PRODUITS_DATA:
-            if item['code'].upper() not in existing_codes:
-                add_table_value('produits', table_cfg, item)
-                added += 1
-        if added:
-            print(f"  → Produits: {added} ajouté(s)")
+        sheet = get_or_create_table_sheet('produits', table_cfg)
+        if sheet:
+            existing = sheet.get_all_records()
+            existing_codes = {str(e.get('Code', '')).upper() for e in existing}
+            colonnes = table_cfg.get('colonnes', [])
+            rows_to_add = []
+            next_id = len(existing) + 1
+            for item in PRODUITS_DATA:
+                if item['code'].upper() not in existing_codes:
+                    rows_to_add.append([next_id] + [item.get(col['id'], '') for col in colonnes])
+                    next_id += 1
+            if rows_to_add:
+                sheet.append_rows(rows_to_add)
+                print(f"  → Produits: {len(rows_to_add)} ajouté(s)")
     
     # Épaisseurs - clé unique: (essence, ep_sec)
     table_cfg = next((t for t in config.get('tables', []) if t['id'] == 'epaisseurs'), None)
     if table_cfg:
-        get_or_create_table_sheet('epaisseurs', table_cfg)
-        existing = get_table_values('epaisseurs')
-        existing_keys = {
-            (str(e.get('Essence', '')).upper(), int(e.get('Ép. sec (mm)', 0) or 0))
-            for e in existing
-        }
-        added = 0
-        for item in EPAISSEURS_DATA:
-            key = (item['essence'].upper(), item['ep_sec'])
-            if key not in existing_keys:
-                add_table_value('epaisseurs', table_cfg, item)
-                added += 1
-        if added:
-            print(f"  → Épaisseurs: {added} ajoutée(s)")
+        sheet = get_or_create_table_sheet('epaisseurs', table_cfg)
+        if sheet:
+            existing = sheet.get_all_records()
+            existing_keys = {
+                (str(e.get('Essence', '')).upper(), int(e.get('Ép. sec (mm)', 0) or 0))
+                for e in existing
+            }
+            colonnes = table_cfg.get('colonnes', [])
+            rows_to_add = []
+            next_id = len(existing) + 1
+            for item in EPAISSEURS_DATA:
+                key = (item['essence'].upper(), item['ep_sec'])
+                if key not in existing_keys:
+                    rows_to_add.append([next_id] + [item.get(col['id'], '') for col in colonnes])
+                    next_id += 1
+            if rows_to_add:
+                sheet.append_rows(rows_to_add)
+                print(f"  → Épaisseurs: {len(rows_to_add)} ajoutée(s)")
 
 
 def get_or_create_poste_sheet(poste_id: str, poste_config: dict):
