@@ -292,8 +292,8 @@ DEFAULT_CONFIG = {
                 {'id': 'code', 'nom': 'Code', 'type': 'text', 'width': 60},
                 {'id': 'nom', 'nom': 'Nom', 'type': 'text', 'width': 120},
                 {'id': 'nom_latin', 'nom': 'Nom latin', 'type': 'text', 'width': 150},
-                {'id': 'densite_frais', 'nom': 'Densité frais', 'type': 'number', 'width': 80},
-                {'id': 'densite_sec', 'nom': 'Densité sec', 'type': 'number', 'width': 80}
+                {'id': 'densite_frais', 'nom': 'Densité frais (kg/m³)', 'type': 'number', 'width': 100},
+                {'id': 'densite_sec', 'nom': 'Densité sec (kg/m³)', 'type': 'number', 'width': 100}
             ]
         },
         {
