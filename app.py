@@ -305,30 +305,30 @@ DEFAULT_CONFIG = {
             'id': 'essences',
             'nom': 'Essences',
             'colonnes': [
-                {'id': 'code', 'nom': 'Code', 'type': 'text', 'width': 60},
-                {'id': 'nom', 'nom': 'Nom', 'type': 'text', 'width': 120},
-                {'id': 'nom_latin', 'nom': 'Nom latin', 'type': 'text', 'width': 150},
-                {'id': 'densite_frais', 'nom': 'Densité frais (kg/m³)', 'type': 'number', 'width': 100},
-                {'id': 'densite_sec', 'nom': 'Densité sec (kg/m³)', 'type': 'number', 'width': 100}
+                {'id': 'code', 'nom': 'Code', 'type': 'text'},
+                {'id': 'nom', 'nom': 'Nom', 'type': 'text'},
+                {'id': 'nom_latin', 'nom': 'Nom latin', 'type': 'text'},
+                {'id': 'densite_frais', 'nom': 'Densité frais (kg/m³)', 'type': 'number'},
+                {'id': 'densite_sec', 'nom': 'Densité sec (kg/m³)', 'type': 'number'}
             ]
         },
         {
             'id': 'forets',
             'nom': 'Forêts',
             'colonnes': [
-                {'id': 'code', 'nom': 'Code', 'type': 'text', 'width': 60},
-                {'id': 'nom', 'nom': 'Nom', 'type': 'text', 'width': 150},
-                {'id': 'departement', 'nom': 'Département', 'type': 'text', 'width': 100}
+                {'id': 'code', 'nom': 'Code', 'type': 'text'},
+                {'id': 'nom', 'nom': 'Nom', 'type': 'text'},
+                {'id': 'departement', 'nom': 'Département', 'type': 'text'}
             ]
         },
         {
             'id': 'lots',
             'nom': 'Lots',
             'colonnes': [
-                {'id': 'numero', 'nom': 'Numéro', 'type': 'text', 'width': 80},
-                {'id': 'foret', 'nom': 'Forêt', 'type': 'text', 'width': 120},
-                {'id': 'date_achat', 'nom': 'Date achat', 'type': 'text', 'width': 100},
-                {'id': 'volume', 'nom': 'Volume m³', 'type': 'number', 'width': 80}
+                {'id': 'numero', 'nom': 'Numéro', 'type': 'text'},
+                {'id': 'foret', 'nom': 'Forêt', 'type': 'ref', 'ref_table': 'forets', 'ref_col': 'nom'},
+                {'id': 'date_achat', 'nom': 'Date achat', 'type': 'date'},
+                {'id': 'volume', 'nom': 'Volume m³', 'type': 'number'}
             ]
         }
     ],

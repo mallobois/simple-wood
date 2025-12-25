@@ -54,19 +54,21 @@
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
+            flex-shrink: 0;
         }
         .item-icon.round { border-radius: 50%; }
-        .item-info { flex: 1; }
+        .item-info { flex: 1; min-width: 0; }
         .item-name { font-weight: 500; }
-        .item-detail { font-size: 0.8rem; color: #86868b; }
+        .item-detail { font-size: 0.8rem; color: #86868b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .item-badge {
             font-size: 0.7rem;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             background: #e5e5e7;
+            flex-shrink: 0;
         }
         .item-badge.admin { background: #007aff; color: #fff; }
-        .item-actions { display: flex; gap: 0.5rem; }
+        .item-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
         .btn-icon {
             width: 32px;
             height: 32px;
@@ -91,6 +93,7 @@
         .btn:hover { background: #0066d6; }
         .btn.secondary { background: #e5e5e7; color: #1d1d1f; }
         .btn.danger { background: #ff3b30; }
+        .btn.small { padding: 0.5rem 1rem; font-size: 0.85rem; }
         .add-btn { width: 100%; padding: 1rem; margin-top: 1rem; }
         .modal {
             display: none;
@@ -100,17 +103,19 @@
             align-items: center;
             justify-content: center;
             z-index: 100;
+            padding: 1rem;
         }
         .modal.show { display: flex; }
         .modal-content {
             background: #fff;
             border-radius: 16px;
             padding: 1.5rem;
-            width: 90%;
-            max-width: 600px;
+            width: 100%;
+            max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
         }
+        .modal-content.wide { max-width: 700px; }
         .modal h3 { font-size: 1.1rem; margin-bottom: 1.5rem; }
         .form-group { margin-bottom: 1rem; }
         .form-group label {
@@ -152,47 +157,60 @@
             border-radius: 6px;
         }
         .poste-checkbox input { width: 16px; height: 16px; }
-        /* Table values */
-        .values-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1rem;
-        }
-        .values-table th {
-            text-align: left;
-            padding: 0.5rem;
-            font-size: 0.75rem;
-            color: #86868b;
-            border-bottom: 1px solid #e5e5e7;
-        }
-        .values-table td {
-            padding: 0.5rem;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .values-table input {
-            width: 100%;
-            padding: 0.4rem;
-            border: 1px solid #e5e5e7;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-        .values-table .btn-icon { width: 28px; height: 28px; }
-        .add-row {
-            display: flex;
-            gap: 0.5rem;
-            padding: 0.5rem;
+        
+        /* Table values - responsive cards */
+        .values-list { margin-bottom: 1rem; }
+        .value-card {
             background: #f9f9fb;
             border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
         }
-        .add-row input {
-            flex: 1;
+        .value-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .value-card-id {
+            font-size: 0.75rem;
+            color: #86868b;
+        }
+        .value-card-fields {
+            display: grid;
+            gap: 0.5rem;
+        }
+        .value-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .value-field label {
+            font-size: 0.7rem;
+            color: #86868b;
+            text-transform: uppercase;
+        }
+        .value-field input, .value-field select {
             padding: 0.5rem;
             border: 1px solid #e5e5e7;
             border-radius: 6px;
+            font-size: 0.9rem;
         }
-        .values-wrapper {
-            max-height: 400px;
-            overflow-y: auto;
+        .add-value-card {
+            background: #e8f4fd;
+            border: 2px dashed #007aff;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .add-value-card h4 {
+            font-size: 0.8rem;
+            color: #007aff;
+            margin-bottom: 0.75rem;
+        }
+        .add-value-fields {
+            display: grid;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
         }
     </style>
 </head>
@@ -242,15 +260,10 @@
 
     <!-- Modal Valeurs Table -->
     <div class="modal" id="values-modal">
-        <div class="modal-content">
+        <div class="modal-content wide">
             <h3 id="values-modal-title">Valeurs</h3>
-            <div class="values-wrapper">
-                <table class="values-table" id="values-table">
-                    <thead id="values-thead"></thead>
-                    <tbody id="values-tbody"></tbody>
-                </table>
-            </div>
-            <div class="add-row" id="add-row"></div>
+            <div class="values-list" id="values-list"></div>
+            <div class="add-value-card" id="add-value-card"></div>
             <div class="modal-actions">
                 <button class="btn secondary" onclick="closeValuesModal()">Fermer</button>
             </div>
@@ -407,6 +420,7 @@
         let tables = [];
         let currentTable = null;
         let currentTableValues = [];
+        let refTableValues = {};
         let editingPrinter = null;
         let editingPoste = null;
         let editingUser = null;
@@ -487,8 +501,18 @@
             if (!currentTable) return;
             
             document.getElementById('values-modal-title').textContent = currentTable.nom;
+            
+            // Charger les valeurs des tables référencées
+            refTableValues = {};
+            for (const col of (currentTable.colonnes || [])) {
+                if (col.type === 'ref' && col.ref_table) {
+                    const res = await fetch('/api/tables/' + col.ref_table + '/values');
+                    refTableValues[col.ref_table] = await res.json();
+                }
+            }
+            
             await loadTableValues();
-            renderValuesTable();
+            renderValuesCards();
             document.getElementById('values-modal').classList.add('show');
         }
 
@@ -502,32 +526,61 @@
             currentTableValues = await res.json();
         }
 
-        function renderValuesTable() {
-            const colonnes = currentTable.colonnes || [{ id: 'valeur', nom: 'Valeur' }];
+        function renderValuesCards() {
+            const colonnes = currentTable.colonnes || [{ id: 'valeur', nom: 'Valeur', type: 'text' }];
             
-            // Header
-            document.getElementById('values-thead').innerHTML = `
-                <tr>
-                    ${colonnes.map(c => `<th>${c.nom}</th>`).join('')}
-                    <th style="width:40px"></th>
-                </tr>
-            `;
+            // Liste des valeurs existantes
+            document.getElementById('values-list').innerHTML = currentTableValues.map(row => `
+                <div class="value-card" data-id="${row.ID}">
+                    <div class="value-card-header">
+                        <span class="value-card-id">#${row.ID}</span>
+                        <button class="btn-icon delete" onclick="deleteRow(${row.ID})">🗑️</button>
+                    </div>
+                    <div class="value-card-fields">
+                        ${colonnes.map(c => `
+                            <div class="value-field">
+                                <label>${c.nom}</label>
+                                ${renderFieldInput(c, row[c.nom] || '', row.ID)}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('') || '<p style="color:#86868b;text-align:center;padding:1rem;">Aucune valeur</p>';
             
-            // Body
-            document.getElementById('values-tbody').innerHTML = currentTableValues.map(row => `
-                <tr data-id="${row.ID}">
+            // Formulaire d'ajout
+            document.getElementById('add-value-card').innerHTML = `
+                <h4>+ Ajouter</h4>
+                <div class="add-value-fields">
                     ${colonnes.map(c => `
-                        <td><input type="${c.type || 'text'}" value="${row[c.nom] || ''}" data-col="${c.id}" onchange="updateRow(${row.ID})"></td>
+                        <div class="value-field">
+                            <label>${c.nom}</label>
+                            ${renderFieldInput(c, '', 'new')}
+                        </div>
                     `).join('')}
-                    <td><button class="btn-icon delete" onclick="deleteRow(${row.ID})">🗑️</button></td>
-                </tr>
-            `).join('') || '<tr><td colspan="99" style="text-align:center;color:#86868b;padding:1rem;">Aucune valeur</td></tr>';
-            
-            // Add row
-            document.getElementById('add-row').innerHTML = `
-                ${colonnes.map(c => `<input type="${c.type || 'text'}" id="new-${c.id}" placeholder="${c.nom}">`).join('')}
-                <button class="btn" onclick="addRow()">+</button>
+                </div>
+                <button class="btn small" onclick="addRow()">Ajouter</button>
             `;
+        }
+
+        function renderFieldInput(col, value, rowId) {
+            const inputId = `field-${rowId}-${col.id}`;
+            
+            if (col.type === 'ref' && col.ref_table) {
+                const refValues = refTableValues[col.ref_table] || [];
+                const refCol = col.ref_col || 'nom';
+                const options = refValues.map(r => {
+                    const optValue = r[refCol] || r['Nom'] || r['Valeur'] || '';
+                    const selected = optValue === value ? 'selected' : '';
+                    return `<option value="${optValue}" ${selected}>${optValue}</option>`;
+                }).join('');
+                return `<select id="${inputId}" data-col="${col.id}" onchange="updateRow(${rowId})">
+                    <option value="">-- Choisir --</option>
+                    ${options}
+                </select>`;
+            }
+            
+            const inputType = col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text';
+            return `<input type="${inputType}" id="${inputId}" data-col="${col.id}" value="${value}" onchange="updateRow(${rowId})">`;
         }
 
         async function addRow() {
@@ -536,7 +589,7 @@
             let hasValue = false;
             
             colonnes.forEach(c => {
-                const input = document.getElementById('new-' + c.id);
+                const input = document.getElementById('field-new-' + c.id);
                 if (input) {
                     data[c.id] = input.value.trim();
                     if (data[c.id]) hasValue = true;
@@ -551,23 +604,19 @@
                 body: JSON.stringify(data)
             });
             
-            // Clear inputs
-            colonnes.forEach(c => {
-                const input = document.getElementById('new-' + c.id);
-                if (input) input.value = '';
-            });
-            
             await loadTableValues();
-            renderValuesTable();
+            renderValuesCards();
         }
 
         async function updateRow(rowId) {
+            if (rowId === 'new') return;
+            
             const colonnes = currentTable.colonnes || [];
-            const row = document.querySelector(`tr[data-id="${rowId}"]`);
+            const card = document.querySelector(`.value-card[data-id="${rowId}"]`);
             const data = {};
             
             colonnes.forEach(c => {
-                const input = row.querySelector(`input[data-col="${c.id}"]`);
+                const input = card.querySelector(`[data-col="${c.id}"]`);
                 if (input) data[c.id] = input.value;
             });
             
@@ -581,7 +630,7 @@
         async function deleteRow(rowId) {
             await fetch('/api/tables/' + currentTable.id + '/values/' + rowId, { method: 'DELETE' });
             await loadTableValues();
-            renderValuesTable();
+            renderValuesCards();
         }
 
         // === PRINTERS ===
@@ -645,7 +694,7 @@
                     <div class="item-icon round">${u.initiales}</div>
                     <div class="item-info">
                         <div class="item-name">${u.nom}</div>
-                        <div class="item-detail">${u.id}${u.postes?.length ? ' · ' + u.postes.join(', ') : ''}</div>
+                        <div class="item-detail">${u.id}</div>
                     </div>
                     <span class="item-badge ${u.droits}">${u.droits}</span>
                     <div class="item-actions">
