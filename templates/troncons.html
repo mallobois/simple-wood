@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tronçons - MALLO BOIS</title>
+    <title>Création de tronçon - MALLO BOIS</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -27,9 +27,6 @@
             color: #007aff;
             text-decoration: none;
             font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
         }
 
         header h1 {
@@ -69,63 +66,93 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         }
 
-        .counter-display {
-            text-align: center;
-            padding: 2rem 1rem;
+        .info-section {
             margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
             border-bottom: 1px solid #e5e5e7;
         }
 
-        .counter-display .label {
+        .info-section h2 {
             font-size: 0.75rem;
-            color: #86868b;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .counter-display .numero {
-            font-family: 'SF Mono', 'Menlo', monospace;
-            font-size: 3.5rem;
-            font-weight: 600;
-            color: #1d1d1f;
-            letter-spacing: 0.1em;
-        }
-
-        .counter-display .code {
-            font-size: 0.85rem;
-            color: #86868b;
-            margin-top: 0.5rem;
-            font-family: 'SF Mono', 'Menlo', monospace;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            font-size: 0.8rem;
             font-weight: 500;
             color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+        }
+
+        .info-row:not(:last-child) {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-label {
+            font-size: 0.95rem;
+            color: #1d1d1f;
+        }
+
+        .info-value {
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .info-value.large {
+            font-size: 1.5rem;
+        }
+
+        .code-complet {
+            text-align: center;
+            padding: 1.25rem;
+            background: #f5f5f7;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .code-complet .label {
+            font-size: 0.7rem;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
             margin-bottom: 0.5rem;
         }
 
-        input {
-            width: 100%;
-            background: #f5f5f7;
-            border: none;
-            border-radius: 8px;
-            padding: 0.875rem 1rem;
-            color: #1d1d1f;
-            font-size: 1.1rem;
+        .code-complet .value {
             font-family: 'SF Mono', 'Menlo', monospace;
-            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1d1d1f;
         }
 
-        input:focus {
-            outline: 2px solid #007aff;
-            outline-offset: -2px;
+        .option-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            margin-bottom: 1rem;
+        }
+
+        .option-label {
+            font-size: 1rem;
+            color: #1d1d1f;
+        }
+
+        .checkbox-wrapper {
+            position: relative;
+        }
+
+        .checkbox-wrapper input {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: #007aff;
         }
 
         .btn {
@@ -178,7 +205,7 @@
 <body>
     <header>
         <a href="/" class="back">← Accueil</a>
-        <h1>Tronçons</h1>
+        <h1>Création de tronçon</h1>
         <div class="status">
             <span class="status-dot" id="status-dot"></span>
             <span id="status-text">—</span>
@@ -189,19 +216,34 @@
         <div class="card">
             <div id="message" class="message"></div>
 
-            <div class="counter-display">
-                <div class="label">Prochain numéro</div>
-                <div class="numero" id="numero">00 00 00</div>
-                <div class="code" id="code">TRO-2601-000000</div>
+            <div class="info-section">
+                <h2>Informations de l'étiquette</h2>
+                
+                <div class="info-row">
+                    <span class="info-label">Série en cours</span>
+                    <span class="info-value" id="serie">—</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">Numéro actuel</span>
+                    <span class="info-value large" id="numero">00 00 00</span>
+                </div>
+
+                <div class="code-complet">
+                    <div class="label">Code complet</div>
+                    <div class="value" id="code">TRO-2601-000000</div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Nombre de copies</label>
-                <input type="number" id="copies" value="1" min="1" max="50">
+            <div class="option-row">
+                <span class="option-label">Imprimer l'étiquette</span>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="imprimer" checked>
+                </div>
             </div>
 
-            <button class="btn" id="btn-print" onclick="imprimer()">
-                Imprimer
+            <button class="btn" id="btn-valider" onclick="valider()">
+                Valider
             </button>
         </div>
     </main>
@@ -232,10 +274,10 @@
             const serie = config.troncons.serie;
             const prefixe = config.troncons.prefixe;
             
+            document.getElementById('serie').textContent = serie;
             document.getElementById('numero').textContent = formatNumero(compteur);
             document.getElementById('code').textContent = 
                 `${prefixe}${serie}-${String(compteur).padStart(6, '0')}`;
-            document.getElementById('copies').value = config.troncons.copies_defaut;
             document.getElementById('status-text').textContent = 
                 `${config.printer.ip}:${config.printer.port}`;
         }
@@ -256,32 +298,43 @@
             document.getElementById('status-dot').className = 'status-dot ' + (ok ? 'ok' : 'error');
         }
 
-        async function imprimer() {
-            const btn = document.getElementById('btn-print');
+        async function valider() {
+            const btn = document.getElementById('btn-valider');
             btn.disabled = true;
-            btn.textContent = 'Impression...';
+            btn.textContent = 'Validation...';
 
-            const copies = parseInt(document.getElementById('copies').value);
+            const imprimer = document.getElementById('imprimer').checked;
 
             try {
                 const res = await fetch('/api/print/troncons', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ copies })
+                    body: JSON.stringify({ 
+                        copies: imprimer ? 1 : 0,
+                        imprimer: imprimer
+                    })
                 });
                 const data = await res.json();
-                showMessage(data.message, data.success ? 'success' : 'error');
-                setStatus(data.success);
+                
                 if (data.success) {
+                    if (imprimer) {
+                        showMessage('Tronçon validé et imprimé - N° ' + data.numero_imprime, 'success');
+                    } else {
+                        showMessage('Tronçon validé - N° ' + data.numero_imprime, 'success');
+                    }
+                    setStatus(true);
                     config.troncons.compteur = data.compteur;
                     updateUI();
+                } else {
+                    showMessage(data.message, 'error');
+                    setStatus(false);
                 }
             } catch (e) {
                 showMessage('Erreur communication', 'error');
                 setStatus(false);
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Imprimer';
+                btn.textContent = 'Valider';
             }
         }
     </script>

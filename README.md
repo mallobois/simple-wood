@@ -5,17 +5,13 @@ Système d'étiquetage Zebra pour scierie - MALLO BOIS
 ## Installation sur Raspberry Pi
 
 ```bash
-# Cloner le repo
-git clone https://github.com/TON_USERNAME/simple-wood.git
-cd simple-wood
+# Installation automatique
+curl -sSL https://raw.githubusercontent.com/mallobois/simple-wood/main/install.sh | bash
+```
 
-# Créer l'environnement Python
-python3 -m venv venv
-source venv/bin/activate
-pip install flask
-
-# Lancer
-python3 app.py
+Puis copiez votre fichier `credentials.json` (Google Sheets) :
+```bash
+scp credentials.json pi@<IP_RASPBERRY>:~/simple-wood/
 ```
 
 Accès : `http://<IP_RASPBERRY>:5000`
@@ -25,9 +21,10 @@ Accès : `http://<IP_RASPBERRY>:5000`
 ```bash
 cd ~/simple-wood
 git pull
-source venv/bin/activate
-python3 app.py
+sudo systemctl restart simple-wood
 ```
+
+Ou via le bouton "Mettre à jour" dans Paramètres.
 
 ## Structure
 
@@ -35,6 +32,7 @@ python3 app.py
 simple-wood/
 ├── app.py              # Serveur Flask
 ├── config.json         # Configuration (créé au 1er lancement)
+├── credentials.json    # Credentials Google Sheets (non commité)
 ├── requirements.txt
 └── templates/
     ├── index.html      # Accueil
@@ -49,6 +47,13 @@ simple-wood/
 Par défaut : `192.168.1.67:9100`
 
 Modifiable dans Paramètres ou directement dans `config.json`.
+
+## Google Sheets
+
+Chaque impression est loguée dans un Google Sheet avec 3 onglets :
+- **Tronçons** : Date, Heure, Série, Numéro, Code, Copies, Opérateur
+- **Paquets** : + Essence, Qualité, Dimensions, Volume
+- **Colis** : + Client, Référence, Destination, Poids
 
 ---
 

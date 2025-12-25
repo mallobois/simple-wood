@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - MALLO BOIS</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            width: 64px;
+            height: 64px;
+            background: #1d1d1f;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo p {
+            color: #86868b;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #86868b;
+            margin-bottom: 0.5rem;
+        }
+
+        input {
+            width: 100%;
+            background: #f5f5f7;
+            border: none;
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            color: #1d1d1f;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: 2px solid #007aff;
+            outline-offset: -2px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #007aff;
+            color: #fff;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #0066d6;
+        }
+
+        .btn:disabled {
+            background: #d2d2d7;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 0.875rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+            text-align: center;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        footer {
+            margin-top: 2rem;
+            color: #86868b;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo">
+            <div class="logo-icon">MB</div>
+            <h1>MALLO BOIS</h1>
+            <p>WoodStock by Happy*Business</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="form-group">
+            <label>Identifiant</label>
+            <input type="text" id="username" placeholder="Entrez votre identifiant" autofocus>
+        </div>
+
+        <div class="form-group">
+            <label>Mot de passe</label>
+            <input type="password" id="password" placeholder="Entrez votre mot de passe">
+        </div>
+
+        <button class="btn" onclick="login()">Se connecter</button>
+    </div>
+
+    <footer>
+        ÉTABLISSEMENTS MALLO BOIS SAS — Réguisheim
+    </footer>
+
+    <script>
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') login();
+        });
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('password').focus();
+        });
+
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showMessage('Veuillez remplir tous les champs');
+                return;
+            }
+
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    window.location.href = '/';
+                } else {
+                    showMessage(data.message || 'Erreur de connexion');
+                }
+            } catch (e) {
+                showMessage('Erreur de communication');
+            }
+        }
+
+        function showMessage(text) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

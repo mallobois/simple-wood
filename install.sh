@@ -24,10 +24,19 @@ else
     
     echo "→ Création environnement Python..."
     python3 -m venv venv
-    
-    echo "→ Installation Flask..."
-    source venv/bin/activate
-    pip install --quiet flask
+fi
+
+echo "→ Installation dépendances..."
+source venv/bin/activate
+pip install --quiet flask gspread google-auth
+
+# Vérifier credentials.json
+if [ ! -f "$DIR/credentials.json" ]; then
+    echo ""
+    echo "⚠ ATTENTION: credentials.json manquant !"
+    echo "  Copiez votre fichier credentials.json dans $DIR/"
+    echo "  pour activer Google Sheets"
+    echo ""
 fi
 
 echo ""
@@ -78,4 +87,3 @@ fi
 IP=$(hostname -I | awk '{print $1}')
 echo "Accès : http://$IP:5000"
 echo ""
-
