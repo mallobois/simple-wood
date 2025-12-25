@@ -92,8 +92,10 @@ def get_or_create_poste_sheet(poste_id: str, poste_config: dict):
         return spreadsheet.worksheet(sheet_name)
     except gspread.WorksheetNotFound:
         sheet = spreadsheet.add_worksheet(title=sheet_name, rows=1000, cols=20)
-        # En-têtes: Date, Heure, Série, Numéro, [Source si applicable], champs dynamiques..., Copies, Opérateur
+        # En-têtes: Date, Heure, Série, Numéro, [Essence, Qualité si type_produit], [Source si applicable], champs dynamiques..., Copies, Opérateur
         headers = ['Date', 'Heure', 'Série', 'Numéro']
+        if poste_config.get('type_produit'):
+            headers.extend(['Essence', 'Qualité'])
         if poste_config.get('source_poste'):
             headers.append('Source')
         for field in poste_config.get('champs', []):
@@ -116,6 +118,9 @@ def log_to_poste_sheet(poste_id: str, poste_config: dict, data: dict, copies: in
             poste_config.get('serie', '2501'),
             data.get('numero', '')
         ]
+        if poste_config.get('type_produit'):
+            row.append(data.get('essence', ''))
+            row.append(data.get('qualite', ''))
         if poste_config.get('source_poste'):
             row.append(data.get('source', ''))
         for field in poste_config.get('champs', []):
@@ -285,6 +290,7 @@ DEFAULT_CONFIG = {
             'prefixe': 'TRO-',
             'printer': 'zebra1',
             'copies_defaut': 1,
+            'type_produit': 'TRO',
             'champs': []
         },
         {
@@ -296,6 +302,7 @@ DEFAULT_CONFIG = {
             'prefixe': 'SCI-',
             'printer': 'zebra1',
             'copies_defaut': 1,
+            'type_produit': 'PQT',
             'source_poste': 'troncons',
             'champs': []
         }
@@ -313,6 +320,24 @@ DEFAULT_CONFIG = {
             ]
         },
         {
+            'id': 'produits',
+            'nom': 'Produits',
+            'colonnes': [
+                {'id': 'code', 'nom': 'Code', 'type': 'text'},
+                {'id': 'nom', 'nom': 'Nom', 'type': 'text'}
+            ]
+        },
+        {
+            'id': 'qualites',
+            'nom': 'Qualités',
+            'colonnes': [
+                {'id': 'essence', 'nom': 'Essence', 'type': 'ref', 'ref_table': 'essences', 'ref_col': 'Code'},
+                {'id': 'produit', 'nom': 'Produit', 'type': 'ref', 'ref_table': 'produits', 'ref_col': 'Code'},
+                {'id': 'code', 'nom': 'Code', 'type': 'text'},
+                {'id': 'nom', 'nom': 'Nom', 'type': 'text'}
+            ]
+        },
+        {
             'id': 'forets',
             'nom': 'Forêts',
             'colonnes': [
@@ -326,7 +351,7 @@ DEFAULT_CONFIG = {
             'nom': 'Lots',
             'colonnes': [
                 {'id': 'numero', 'nom': 'Numéro', 'type': 'text'},
-                {'id': 'foret', 'nom': 'Forêt', 'type': 'ref', 'ref_table': 'forets', 'ref_col': 'nom'},
+                {'id': 'foret', 'nom': 'Forêt', 'type': 'ref', 'ref_table': 'forets', 'ref_col': 'Nom'},
                 {'id': 'date_achat', 'nom': 'Date achat', 'type': 'date'},
                 {'id': 'volume', 'nom': 'Volume m³', 'type': 'number'}
             ]
@@ -411,9 +436,20 @@ def generate_zpl(poste: dict, data: dict, source: str = '') -> str:
     numero = format_numero(compteur)
     qr_data = f"{prefixe}{serie}-{format_numero_compact(compteur)}"
     
+    essence = data.get('essence', '')
+    qualite = data.get('qualite', '')
+    
     # Construction des lignes de champs
     champs_zpl = ""
     y_pos = 180
+    
+    # Ajouter essence et qualité si présentes
+    if essence:
+        champs_zpl += f"^FO400,{y_pos}^A0N,28,28^FD{essence}"
+        if qualite:
+            champs_zpl += f" - {qualite}"
+        champs_zpl += "^FS\n"
+        y_pos += 35
     
     # Ajouter la source si présente
     if source:
@@ -781,6 +817,7 @@ def api_update_poste(poste_id):
             p['prefixe'] = data.get('prefixe', p.get('prefixe', ''))
             p['printer'] = data.get('printer', p['printer'])
             p['copies_defaut'] = int(data.get('copies_defaut', p.get('copies_defaut', 1)))
+            p['type_produit'] = data.get('type_produit', p.get('type_produit', ''))
             p['source_poste'] = data.get('source_poste', p.get('source_poste', ''))
             if 'compteur' in data:
                 p['compteur'] = int(data['compteur']) % 1000000
@@ -906,6 +943,18 @@ def api_update_table_value(table_id, row_id):
 def api_delete_table_value(table_id, row_id):
     success = delete_table_value(table_id, row_id)
     return jsonify({'success': success})
+
+
+@app.route('/api/qualites/<essence_code>/<produit_code>', methods=['GET'])
+def api_get_qualites_filtrees(essence_code, produit_code):
+    """Récupère les qualités pour une essence et un produit donnés"""
+    all_qualites = get_table_values('qualites')
+    filtered = [
+        q for q in all_qualites
+        if q.get('Essence', '').upper() == essence_code.upper()
+        and q.get('Produit', '').upper() == produit_code.upper()
+    ]
+    return jsonify(filtered)
 
 
 # ============== API IMPRESSION ==============

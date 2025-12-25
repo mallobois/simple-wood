@@ -165,6 +165,21 @@
         </div>
 
         <div class="section">
+            <h2>Type de produit</h2>
+            <div class="form-group">
+                <select id="type_produit">
+                    <option value="">-- Aucun --</option>
+                    <option value="GRU" {% if poste.type_produit == 'GRU' %}selected{% endif %}>GRU - Grumes</option>
+                    <option value="TRO" {% if poste.type_produit == 'TRO' %}selected{% endif %}>TRO - Tronçons</option>
+                    <option value="PQT" {% if poste.type_produit == 'PQT' %}selected{% endif %}>PQT - Paquets</option>
+                    <option value="PDB" {% if poste.type_produit == 'PDB' %}selected{% endif %}>PDB - Prédébits</option>
+                    <option value="PNX" {% if poste.type_produit == 'PNX' %}selected{% endif %}>PNX - Panneaux</option>
+                </select>
+                <div class="hint">Détermine les qualités disponibles selon l'essence sélectionnée</div>
+            </div>
+        </div>
+
+        <div class="section">
             <h2>Poste source (optionnel)</h2>
             <div class="form-group">
                 <select id="source_poste">
@@ -232,6 +247,7 @@
                 compteur: parseInt(document.getElementById('compteur').value),
                 copies_defaut: parseInt(document.getElementById('copies_defaut').value),
                 printer: document.getElementById('printer').value,
+                type_produit: document.getElementById('type_produit').value,
                 source_poste: document.getElementById('source_poste').value,
                 champs: champs
             };

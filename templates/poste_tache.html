@@ -83,7 +83,7 @@
         }
         .form-row {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: 1fr 1fr;
             gap: 0.75rem;
         }
         .copies-row {
@@ -231,6 +231,22 @@
             display: none;
         }
         #qr-reader.show { display: block; }
+        
+        /* Essence/Qualité section */
+        .product-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border: 2px solid #ff9500;
+        }
+        .product-section h2 {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #ff9500;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -293,6 +309,27 @@
         </div>
         {% endif %}
 
+        {% if poste.type_produit %}
+        <!-- Essence et Qualité -->
+        <div class="product-section">
+            <h2>Produit</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Essence</label>
+                    <select id="essence" onchange="loadQualites()">
+                        <option value="">-- Choisir --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Qualité</label>
+                    <select id="qualite">
+                        <option value="">-- Choisir essence --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="numero-display">
             <div class="numero-label">Prochain numéro {{ poste.nom }}</div>
             <div class="numero-value" id="numero">{{ '%02d %02d %02d' % (poste.compteur // 10000, (poste.compteur // 100) % 100, poste.compteur % 100) }}</div>
@@ -342,17 +379,74 @@
         const posteId = '{{ poste.id }}';
         const champs = {{ poste.champs | tojson }};
         const sourcePoste = '{{ poste.source_poste or "" }}';
+        const typeProduit = '{{ poste.type_produit or "" }}';
         let compteur = {{ poste.compteur }};
         let scanner = null;
         let isScanning = false;
         let selectedSource = null;
         let seriesData = {};
+        let essences = [];
+        let qualites = [];
 
-        // Charger les séries si poste source
-        if (sourcePoste) {
-            loadSeries();
+        document.addEventListener('DOMContentLoaded', init);
+
+        async function init() {
+            if (sourcePoste) {
+                loadSeries();
+            }
+            if (typeProduit) {
+                await loadEssences();
+            }
         }
 
+        // ===== Essences & Qualités =====
+        async function loadEssences() {
+            try {
+                const res = await fetch('/api/tables/essences/values');
+                essences = await res.json();
+                
+                const select = document.getElementById('essence');
+                select.innerHTML = '<option value="">-- Choisir --</option>';
+                essences.forEach(e => {
+                    const code = e.Code || e.code || '';
+                    const nom = e.Nom || e.nom || code;
+                    select.innerHTML += `<option value="${code}">${code} - ${nom}</option>`;
+                });
+            } catch (e) {
+                console.error('Erreur chargement essences:', e);
+            }
+        }
+
+        async function loadQualites() {
+            const essenceCode = document.getElementById('essence').value;
+            const select = document.getElementById('qualite');
+            
+            if (!essenceCode || !typeProduit) {
+                select.innerHTML = '<option value="">-- Choisir essence --</option>';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`/api/qualites/${essenceCode}/${typeProduit}`);
+                qualites = await res.json();
+                
+                select.innerHTML = '<option value="">-- Choisir --</option>';
+                if (qualites.length === 0) {
+                    select.innerHTML = '<option value="">Aucune qualité définie</option>';
+                } else {
+                    qualites.forEach(q => {
+                        const code = q.Code || q.code || '';
+                        const nom = q.Nom || q.nom || code;
+                        select.innerHTML += `<option value="${code}">${code} - ${nom}</option>`;
+                    });
+                }
+            } catch (e) {
+                console.error('Erreur chargement qualités:', e);
+                select.innerHTML = '<option value="">Erreur</option>';
+            }
+        }
+
+        // ===== Source (tronçon) =====
         async function loadSeries() {
             try {
                 const res = await fetch('/api/poste/' + sourcePoste + '/series');
@@ -361,7 +455,6 @@
                 const select = document.getElementById('source-serie');
                 select.innerHTML = '<option value="">-- Série --</option>';
                 
-                // Trier les séries (plus récentes en premier)
                 const series = Object.keys(seriesData).sort().reverse();
                 series.forEach(s => {
                     select.innerHTML += `<option value="${s}">${s}</option>`;
@@ -381,7 +474,6 @@
             }
             
             select.innerHTML = '<option value="">-- Numéro --</option>';
-            // Afficher les numéros les plus récents en premier
             const numeros = seriesData[serie].slice().reverse();
             numeros.forEach(n => {
                 const formatted = n.padStart(6, '0');
@@ -406,7 +498,6 @@
             document.getElementById('source-value').textContent = display || code;
             document.getElementById('selected-source').classList.add('show');
             
-            // Vibrer si supporté
             if (navigator.vibrate) {
                 navigator.vibrate(100);
             }
@@ -504,12 +595,10 @@
         function onScanSuccess(decodedText) {
             console.log("QR scanné:", decodedText);
             
-            // Vibrer
             if (navigator.vibrate) {
                 navigator.vibrate(200);
             }
             
-            // Parser le QR code (format: TRO-2501-000123)
             const match = decodedText.match(/^([A-Z]{3})-(\d+)-(\d+)$/);
             if (match) {
                 const serie = match[2];
@@ -527,10 +616,23 @@
 
         // ===== Impression =====
         async function doPrint() {
-            // Vérifier source si requis
+            // Vérifications
             if (sourcePoste && !selectedSource) {
                 showMessage('Veuillez sélectionner un tronçon source', 'error');
                 return;
+            }
+            
+            if (typeProduit) {
+                const essence = document.getElementById('essence').value;
+                const qualite = document.getElementById('qualite').value;
+                if (!essence) {
+                    showMessage('Veuillez sélectionner une essence', 'error');
+                    return;
+                }
+                if (!qualite && qualites.length > 0) {
+                    showMessage('Veuillez sélectionner une qualité', 'error');
+                    return;
+                }
             }
             
             const btn = document.getElementById('btn-print');
@@ -542,6 +644,12 @@
                 copies: parseInt(document.getElementById('copies').value) || 1,
                 source: selectedSource
             };
+            
+            // Ajouter essence et qualité
+            if (typeProduit) {
+                data.essence = document.getElementById('essence').value;
+                data.qualite = document.getElementById('qualite').value;
+            }
 
             champs.forEach(c => {
                 const el = document.getElementById('field-' + c.id);
@@ -567,8 +675,9 @@
                             if (el) el.value = '';
                         }
                     });
-                    // Reset source après impression réussie
-                    clearSource();
+                    // Reset source après impression
+                    if (sourcePoste) clearSource();
+                    // Garder essence/qualité pour le prochain
                 }
             } catch (e) {
                 showMessage('Erreur de communication', 'error');
