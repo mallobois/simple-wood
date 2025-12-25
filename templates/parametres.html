@@ -23,128 +23,183 @@
             gap: 1rem;
         }
 
-        .back {
-            color: #007aff;
-            text-decoration: none;
-            font-size: 1rem;
-        }
-
-        header h1 {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
+        .back { color: #007aff; text-decoration: none; font-size: 1rem; }
+        header h1 { font-size: 1.1rem; font-weight: 600; }
 
         main {
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
             padding: 1.5rem;
         }
 
-        .card {
+        .section {
             background: #fff;
             border-radius: 12px;
             padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
             margin-bottom: 1rem;
         }
 
-        .card h2 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #1d1d1f;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid #e5e5e7;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .form-group {
-            flex: 1;
-        }
-
-        label {
-            display: block;
+        .section h2 {
             font-size: 0.75rem;
             font-weight: 500;
             color: #86868b;
-            margin-bottom: 0.375rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
         }
 
-        input {
-            width: 100%;
-            background: #f5f5f7;
+        .user-list { list-style: none; }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            gap: 0.75rem;
+        }
+
+        .user-item:last-child { border-bottom: none; }
+
+        .user-icon {
+            width: 40px;
+            height: 40px;
+            background: #e5e5e7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-info { flex: 1; }
+        .user-name { font-weight: 500; }
+        .user-id { font-size: 0.8rem; color: #86868b; }
+
+        .user-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: #e5e5e7;
+        }
+
+        .user-badge.admin { background: #007aff; color: #fff; }
+
+        .user-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
             border: none;
-            border-radius: 8px;
-            padding: 0.75rem;
-            color: #1d1d1f;
+            border-radius: 6px;
+            cursor: pointer;
             font-size: 1rem;
+            background: #f5f5f7;
         }
 
-        input:focus {
-            outline: 2px solid #007aff;
-            outline-offset: -2px;
-        }
+        .btn-icon:hover { background: #e5e5e7; }
+        .btn-icon.delete:hover { background: #ff3b30; color: #fff; }
 
         .btn {
-            padding: 0.75rem 1.25rem;
+            padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 8px;
             font-size: 0.95rem;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-primary {
             background: #007aff;
             color: #fff;
+        }
+
+        .btn:hover { background: #0066d6; }
+        .btn.secondary { background: #e5e5e7; color: #1d1d1f; }
+        .btn.secondary:hover { background: #d2d2d7; }
+        .btn.danger { background: #ff3b30; }
+        .btn.danger:hover { background: #d63029; }
+
+        .add-user-btn {
             width: 100%;
+            padding: 1rem;
+            margin-top: 1rem;
         }
 
-        .btn-primary:hover { background: #0066d6; }
-
-        .btn-secondary {
-            background: #e5e5e7;
-            color: #1d1d1f;
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
         }
 
-        .btn-secondary:hover { background: #d2d2d7; }
+        .modal.show { display: flex; }
 
-        .btn:disabled {
-            background: #d2d2d7;
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
             color: #86868b;
-            cursor: not-allowed;
+            margin-bottom: 0.5rem;
         }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007aff;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-actions .btn { flex: 1; }
 
         .message {
-            padding: 0.875rem 1rem;
+            padding: 0.75rem 1rem;
             border-radius: 8px;
             margin-bottom: 1rem;
+            font-size: 0.85rem;
             display: none;
-            font-size: 0.9rem;
-            text-align: center;
         }
 
         .message.show { display: block; }
         .message.success { background: #d4edda; color: #155724; }
         .message.error { background: #f8d7da; color: #721c24; }
 
-        .test-row {
-            display: flex;
-            gap: 0.75rem;
-            align-items: flex-end;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: #86868b;
-            font-size: 0.75rem;
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
         }
     </style>
 </head>
@@ -157,204 +212,278 @@
     <main>
         <div id="message" class="message"></div>
 
-        <div class="card">
-            <h2>🖨️ Imprimante</h2>
-            <div class="test-row">
-                <div class="form-group">
-                    <label>Adresse IP</label>
-                    <input type="text" id="printer-ip" placeholder="192.168.1.67">
-                </div>
-                <div class="form-group" style="flex: 0 0 100px;">
-                    <label>Port</label>
-                    <input type="number" id="printer-port" value="9100">
-                </div>
-                <button class="btn btn-secondary" onclick="testPrinter()">Tester</button>
-            </div>
+        <div class="section">
+            <h2>Utilisateurs</h2>
+            <ul class="user-list" id="user-list"></ul>
+            <button class="btn add-user-btn" onclick="openModal()">+ Ajouter un utilisateur</button>
         </div>
 
-        <div class="card">
-            <h2>🪵 Tronçons</h2>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Préfixe</label>
-                    <input type="text" id="troncons-prefixe" placeholder="TRO-">
-                </div>
-                <div class="form-group">
-                    <label>Série</label>
-                    <input type="text" id="troncons-serie" placeholder="2601">
-                </div>
+        <div class="section">
+            <h2>Imprimante</h2>
+            <div class="form-group">
+                <label>Adresse IP</label>
+                <input type="text" id="printer-ip" value="{{ config.printer.ip }}">
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Compteur actuel</label>
-                    <input type="number" id="troncons-compteur" min="0" max="999999">
-                </div>
-                <div class="form-group">
-                    <label>Copies par défaut</label>
-                    <input type="number" id="troncons-copies" min="1" max="50">
-                </div>
+            <div class="form-group">
+                <label>Port</label>
+                <input type="number" id="printer-port" value="{{ config.printer.port }}">
             </div>
+            <button class="btn secondary" onclick="saveConfig()">Enregistrer</button>
+            <button class="btn secondary" onclick="testPrinter()" style="margin-left: 0.5rem;">Tester</button>
         </div>
 
-        <div class="card">
-            <h2>📦 Paquets</h2>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Série</label>
-                    <input type="text" id="paquet-serie" placeholder="2601">
-                </div>
-                <div class="form-group">
-                    <label>Compteur actuel</label>
-                    <input type="number" id="paquet-compteur" min="0" max="999999">
-                </div>
-                <div class="form-group">
-                    <label>Copies par défaut</label>
-                    <input type="number" id="paquet-copies" min="1" max="50">
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>🚚 Colis</h2>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Série</label>
-                    <input type="text" id="colis-serie" placeholder="2601">
-                </div>
-                <div class="form-group">
-                    <label>Compteur actuel</label>
-                    <input type="number" id="colis-compteur" min="0" max="999999">
-                </div>
-                <div class="form-group">
-                    <label>Copies par défaut</label>
-                    <input type="number" id="colis-copies" min="1" max="50">
-                </div>
-            </div>
-        </div>
-
-        <button class="btn btn-primary" onclick="saveAll()">
-            Enregistrer les paramètres
-        </button>
-
-        <div class="card" style="margin-top: 1rem; background: #f5f5f7;">
-            <h2>🔄 Mise à jour</h2>
-            <p style="font-size: 0.85rem; color: #86868b; margin-bottom: 1rem;">
-                Télécharge la dernière version depuis GitHub
-            </p>
-            <button class="btn btn-secondary" onclick="updateCode()" style="width: 100%;">
-                Mettre à jour
-            </button>
+        <div class="section">
+            <h2>Mise à jour</h2>
+            <button class="btn secondary" onclick="updateApp()">Mettre à jour depuis GitHub</button>
         </div>
     </main>
 
-    <footer>
-        MALLO BOIS — Réguisheim
-    </footer>
+    <!-- Modal utilisateur -->
+    <div class="modal" id="user-modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Nouvel utilisateur</h3>
+            
+            <div class="form-group">
+                <label>Identifiant</label>
+                <input type="text" id="user-id" placeholder="Ex: jean">
+            </div>
+
+            <div class="form-group">
+                <label>Nom complet</label>
+                <input type="text" id="user-nom" placeholder="Ex: Jean Dupont">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Initiales</label>
+                    <input type="text" id="user-initiales" placeholder="Ex: JD" maxlength="3">
+                </div>
+                <div class="form-group">
+                    <label>Droits</label>
+                    <select id="user-droits">
+                        <option value="operateur">Opérateur</option>
+                        <option value="admin">Administrateur</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Code PIN (6-8 chiffres)</label>
+                <input type="text" id="user-pin" placeholder="Ex: 123456" maxlength="8" pattern="[0-9]*" inputmode="numeric">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn secondary" onclick="closeModal()">Annuler</button>
+                <button class="btn" id="btn-save" onclick="saveUser()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal confirmation suppression -->
+    <div class="modal" id="delete-modal">
+        <div class="modal-content">
+            <h3>Supprimer l'utilisateur ?</h3>
+            <p style="color: #86868b; margin-bottom: 1.5rem;">Cette action est irréversible.</p>
+            <div class="modal-actions">
+                <button class="btn secondary" onclick="closeDeleteModal()">Annuler</button>
+                <button class="btn danger" onclick="confirmDelete()">Supprimer</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        let config = {};
+        let users = [];
+        let editingUser = null;
+        let deletingUser = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadConfig();
-        });
+        document.addEventListener('DOMContentLoaded', loadUsers);
 
-        async function loadConfig() {
+        async function loadUsers() {
             try {
-                const res = await fetch('/api/config');
-                config = await res.json();
-                updateUI();
+                const res = await fetch('/api/users/full');
+                users = await res.json();
+                renderUsers();
             } catch (e) {
                 showMessage('Erreur chargement', 'error');
             }
         }
 
-        function updateUI() {
-            document.getElementById('printer-ip').value = config.printer.ip;
-            document.getElementById('printer-port').value = config.printer.port;
-
-            document.getElementById('troncons-prefixe').value = config.troncons.prefixe;
-            document.getElementById('troncons-serie').value = config.troncons.serie;
-            document.getElementById('troncons-compteur').value = config.troncons.compteur;
-            document.getElementById('troncons-copies').value = config.troncons.copies_defaut;
-
-            document.getElementById('paquet-serie').value = config.paquet.serie;
-            document.getElementById('paquet-compteur').value = config.paquet.compteur;
-            document.getElementById('paquet-copies').value = config.paquet.copies_defaut;
-
-            document.getElementById('colis-serie').value = config.colis.serie;
-            document.getElementById('colis-compteur').value = config.colis.compteur;
-            document.getElementById('colis-copies').value = config.colis.copies_defaut;
+        function renderUsers() {
+            const list = document.getElementById('user-list');
+            list.innerHTML = users.map(u => `
+                <li class="user-item">
+                    <div class="user-icon">${u.initiales}</div>
+                    <div class="user-info">
+                        <div class="user-name">${u.nom}</div>
+                        <div class="user-id">${u.id}</div>
+                    </div>
+                    <span class="user-badge ${u.droits}">${u.droits}</span>
+                    <div class="user-actions">
+                        <button class="btn-icon" onclick="editUser('${u.id}')">✏️</button>
+                        <button class="btn-icon delete" onclick="deleteUser('${u.id}')">🗑️</button>
+                    </div>
+                </li>
+            `).join('');
         }
 
-        function showMessage(text, type) {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.className = 'message show ' + type;
-            setTimeout(() => msg.classList.remove('show'), 4000);
+        function openModal(userId = null) {
+            editingUser = userId;
+            const modal = document.getElementById('user-modal');
+            const title = document.getElementById('modal-title');
+            const idInput = document.getElementById('user-id');
+            
+            if (userId) {
+                const user = users.find(u => u.id === userId);
+                title.textContent = 'Modifier l\'utilisateur';
+                idInput.value = user.id;
+                idInput.disabled = true;
+                document.getElementById('user-nom').value = user.nom;
+                document.getElementById('user-initiales').value = user.initiales;
+                document.getElementById('user-droits').value = user.droits;
+                document.getElementById('user-pin').value = '';
+                document.getElementById('user-pin').placeholder = 'Laisser vide pour ne pas changer';
+            } else {
+                title.textContent = 'Nouvel utilisateur';
+                idInput.value = '';
+                idInput.disabled = false;
+                document.getElementById('user-nom').value = '';
+                document.getElementById('user-initiales').value = '';
+                document.getElementById('user-droits').value = 'operateur';
+                document.getElementById('user-pin').value = '';
+                document.getElementById('user-pin').placeholder = 'Ex: 123456';
+            }
+            
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('user-modal').classList.remove('show');
+            editingUser = null;
+        }
+
+        function editUser(userId) {
+            openModal(userId);
+        }
+
+        function deleteUser(userId) {
+            deletingUser = userId;
+            document.getElementById('delete-modal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('show');
+            deletingUser = null;
+        }
+
+        async function confirmDelete() {
+            if (!deletingUser) return;
+            
+            try {
+                const res = await fetch('/api/users/' + deletingUser, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showMessage('Utilisateur supprimé', 'success');
+                    loadUsers();
+                } else {
+                    showMessage(data.message || 'Erreur', 'error');
+                }
+            } catch (e) {
+                showMessage('Erreur de communication', 'error');
+            }
+            
+            closeDeleteModal();
+        }
+
+        async function saveUser() {
+            const id = document.getElementById('user-id').value.trim().toLowerCase();
+            const nom = document.getElementById('user-nom').value.trim();
+            const initiales = document.getElementById('user-initiales').value.trim().toUpperCase();
+            const droits = document.getElementById('user-droits').value;
+            const pin = document.getElementById('user-pin').value.trim();
+
+            if (!id || !nom || !initiales) {
+                showMessage('Remplissez tous les champs', 'error');
+                return;
+            }
+
+            if (!editingUser && (pin.length < 6 || pin.length > 8 || !/^\d+$/.test(pin))) {
+                showMessage('PIN: 6 à 8 chiffres', 'error');
+                return;
+            }
+
+            if (editingUser && pin && (pin.length < 6 || pin.length > 8 || !/^\d+$/.test(pin))) {
+                showMessage('PIN: 6 à 8 chiffres', 'error');
+                return;
+            }
+
+            const payload = { id, nom, initiales, droits };
+            if (pin) payload.password = pin;
+
+            try {
+                const res = await fetch('/api/users', {
+                    method: editingUser ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showMessage(editingUser ? 'Utilisateur modifié' : 'Utilisateur créé', 'success');
+                    closeModal();
+                    loadUsers();
+                } else {
+                    showMessage(data.message || 'Erreur', 'error');
+                }
+            } catch (e) {
+                showMessage('Erreur de communication', 'error');
+            }
+        }
+
+        async function saveConfig() {
+            const ip = document.getElementById('printer-ip').value;
+            const port = document.getElementById('printer-port').value;
+
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ printer: { ip, port: parseInt(port) } })
+                });
+                const data = await res.json();
+                showMessage(data.success ? 'Configuration enregistrée' : 'Erreur', data.success ? 'success' : 'error');
+            } catch (e) {
+                showMessage('Erreur', 'error');
+            }
         }
 
         async function testPrinter() {
             try {
                 const res = await fetch('/api/test', { method: 'POST' });
                 const data = await res.json();
-                showMessage(data.message, data.success ? 'success' : 'error');
+                showMessage(data.success ? 'Impression OK' : data.message, data.success ? 'success' : 'error');
             } catch (e) {
-                showMessage('Erreur communication', 'error');
+                showMessage('Erreur', 'error');
             }
         }
 
-        async function updateCode() {
-            if (!confirm('Mettre à jour depuis GitHub ?')) return;
-            
+        async function updateApp() {
             try {
                 const res = await fetch('/api/update', { method: 'POST' });
                 const data = await res.json();
                 showMessage(data.message, data.success ? 'success' : 'error');
             } catch (e) {
-                showMessage('Erreur communication', 'error');
+                showMessage('Erreur', 'error');
             }
         }
 
-        async function saveAll() {
-            const data = {
-                printer: {
-                    ip: document.getElementById('printer-ip').value,
-                    port: parseInt(document.getElementById('printer-port').value)
-                },
-                troncons: {
-                    prefixe: document.getElementById('troncons-prefixe').value,
-                    serie: document.getElementById('troncons-serie').value,
-                    compteur: parseInt(document.getElementById('troncons-compteur').value),
-                    copies_defaut: parseInt(document.getElementById('troncons-copies').value)
-                },
-                paquet: {
-                    serie: document.getElementById('paquet-serie').value,
-                    compteur: parseInt(document.getElementById('paquet-compteur').value),
-                    copies_defaut: parseInt(document.getElementById('paquet-copies').value)
-                },
-                colis: {
-                    serie: document.getElementById('colis-serie').value,
-                    compteur: parseInt(document.getElementById('colis-compteur').value),
-                    copies_defaut: parseInt(document.getElementById('colis-copies').value)
-                }
-            };
-
-            try {
-                const res = await fetch('/api/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    config = result.config;
-                    showMessage('Paramètres enregistrés', 'success');
-                } else {
-                    showMessage('Erreur sauvegarde', 'error');
-                }
-            } catch (e) {
-                showMessage('Erreur communication', 'error');
-            }
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'message show ' + type;
+            setTimeout(() => msg.classList.remove('show'), 3000);
         }
     </script>
 </body>

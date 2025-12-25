@@ -386,6 +386,112 @@ def api_get_users():
     return jsonify(result)
 
 
+@app.route('/api/users/full', methods=['GET'])
+def api_get_users_full():
+    """Retourne la liste complète des utilisateurs (sans mots de passe)"""
+    users = get_users_from_sheets()
+    result = []
+    for uid, data in users.items():
+        result.append({
+            'id': uid,
+            'nom': data.get('nom', uid),
+            'initiales': data.get('initiales', uid[:2].upper()),
+            'droits': data.get('droits', 'operateur')
+        })
+    return jsonify(result)
+
+
+@app.route('/api/users', methods=['POST'])
+def api_create_user():
+    """Crée un nouvel utilisateur"""
+    if spreadsheet is None:
+        return jsonify({'success': False, 'message': 'Google Sheets non connecté'})
+    
+    data = request.json
+    uid = data.get('id', '').strip().lower()
+    nom = data.get('nom', '').strip()
+    initiales = data.get('initiales', '').strip().upper()
+    droits = data.get('droits', 'operateur')
+    password = data.get('password', '')
+    
+    if not uid or not nom or not initiales or not password:
+        return jsonify({'success': False, 'message': 'Champs manquants'})
+    
+    if len(password) < 6 or len(password) > 8 or not password.isdigit():
+        return jsonify({'success': False, 'message': 'PIN: 6 à 8 chiffres'})
+    
+    # Vérifier si l'utilisateur existe déjà
+    users = get_users_from_sheets()
+    if uid in users:
+        return jsonify({'success': False, 'message': 'Identifiant déjà utilisé'})
+    
+    try:
+        sheet = spreadsheet.worksheet('Utilisateurs')
+        sheet.append_row([uid, password, nom, initiales, droits])
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
+@app.route('/api/users', methods=['PUT'])
+def api_update_user():
+    """Met à jour un utilisateur"""
+    if spreadsheet is None:
+        return jsonify({'success': False, 'message': 'Google Sheets non connecté'})
+    
+    data = request.json
+    uid = data.get('id', '').strip().lower()
+    nom = data.get('nom', '').strip()
+    initiales = data.get('initiales', '').strip().upper()
+    droits = data.get('droits', 'operateur')
+    password = data.get('password', '')
+    
+    if not uid or not nom or not initiales:
+        return jsonify({'success': False, 'message': 'Champs manquants'})
+    
+    if password and (len(password) < 6 or len(password) > 8 or not password.isdigit()):
+        return jsonify({'success': False, 'message': 'PIN: 6 à 8 chiffres'})
+    
+    try:
+        sheet = spreadsheet.worksheet('Utilisateurs')
+        records = sheet.get_all_records()
+        
+        for i, row in enumerate(records):
+            if row.get('Identifiant') == uid:
+                row_num = i + 2  # +1 pour en-tête, +1 car index commence à 1
+                sheet.update_cell(row_num, 3, nom)
+                sheet.update_cell(row_num, 4, initiales)
+                sheet.update_cell(row_num, 5, droits)
+                if password:
+                    sheet.update_cell(row_num, 2, password)
+                return jsonify({'success': True})
+        
+        return jsonify({'success': False, 'message': 'Utilisateur non trouvé'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
+@app.route('/api/users/<uid>', methods=['DELETE'])
+def api_delete_user(uid):
+    """Supprime un utilisateur"""
+    if spreadsheet is None:
+        return jsonify({'success': False, 'message': 'Google Sheets non connecté'})
+    
+    try:
+        sheet = spreadsheet.worksheet('Utilisateurs')
+        records = sheet.get_all_records()
+        
+        for i, row in enumerate(records):
+            if row.get('Identifiant') == uid:
+                row_num = i + 2
+                sheet.delete_rows(row_num)
+                return jsonify({'success': True})
+        
+        return jsonify({'success': False, 'message': 'Utilisateur non trouvé'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
 @app.route('/api/config', methods=['GET'])
 def api_get_config():
     config = load_config()
