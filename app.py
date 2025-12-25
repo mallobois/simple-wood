@@ -34,42 +34,51 @@ gs_client = None
 spreadsheet = None
 
 # ============================================================================
-# DONNÉES DE RÉFÉRENCE
+# DONNÉES DE RÉFÉRENCE - ESSENCES
 # ============================================================================
-
 # PSF = Point de Saturation des Fibres (%)
-# Sources: FNB, CIRAD, Wood Handbook
+# retrait_t = Retrait tangentiel total PSF → 0% (%)
+# Sources: CIRAD, Wood Handbook, FCBA, CTBA
+
 ESSENCES_DATA = [
-    {"code": "HET", "nom": "Hêtre", "nom_latin": "Fagus sylvatica", "densite_frais": 950, "densite_sec": 650, "psf": 32},
-    {"code": "CHE", "nom": "Chêne indigène", "nom_latin": "Quercus", "densite_frais": 1070, "densite_sec": 720, "psf": 29},
-    {"code": "CHS", "nom": "Chêne sessile", "nom_latin": "Quercus petraea", "densite_frais": 1070, "densite_sec": 720, "psf": 29},
-    {"code": "CHP", "nom": "Chêne pédonculé", "nom_latin": "Quercus robur", "densite_frais": 1070, "densite_sec": 720, "psf": 29},
-    {"code": "FRE", "nom": "Frêne", "nom_latin": "Fraxinus", "densite_frais": 920, "densite_sec": 680, "psf": 28},
-    {"code": "FRC", "nom": "Frêne commun", "nom_latin": "Fraxinus excelsior", "densite_frais": 920, "densite_sec": 680, "psf": 28},
-    {"code": "CHT", "nom": "Châtaignier", "nom_latin": "Castanea sativa", "densite_frais": 950, "densite_sec": 590, "psf": 30},
-    {"code": "MER", "nom": "Merisier", "nom_latin": "Prunus avium", "densite_frais": 900, "densite_sec": 620, "psf": 29},
-    {"code": "CHA", "nom": "Charme", "nom_latin": "Carpinus betulus", "densite_frais": 1000, "densite_sec": 750, "psf": 30},
-    {"code": "NOY", "nom": "Noyer", "nom_latin": "Juglans regia", "densite_frais": 900, "densite_sec": 680, "psf": 27},
-    {"code": "ROB", "nom": "Robinier", "nom_latin": "Robinia pseudoacacia", "densite_frais": 950, "densite_sec": 770, "psf": 26},
-    {"code": "ERP", "nom": "Érable plane", "nom_latin": "Acer platanoides", "densite_frais": 900, "densite_sec": 650, "psf": 29},
-    {"code": "ERC", "nom": "Érable champêtre", "nom_latin": "Acer campestre", "densite_frais": 900, "densite_sec": 650, "psf": 29},
-    {"code": "ERS", "nom": "Érable sycomore", "nom_latin": "Acer pseudoplatanus", "densite_frais": 900, "densite_sec": 650, "psf": 29},
-    {"code": "BOU", "nom": "Bouleau", "nom_latin": "Betula", "densite_frais": 850, "densite_sec": 650, "psf": 28},
-    {"code": "TRE", "nom": "Tremble", "nom_latin": "Populus tremula", "densite_frais": 800, "densite_sec": 500, "psf": 29},
-    {"code": "PEU", "nom": "Peuplier", "nom_latin": "Populus", "densite_frais": 800, "densite_sec": 450, "psf": 29},
-    {"code": "TIL", "nom": "Tilleul", "nom_latin": "Tilia", "densite_frais": 800, "densite_sec": 530, "psf": 31},
-    {"code": "ALT", "nom": "Alisier torminal", "nom_latin": "Sorbus torminalis", "densite_frais": 950, "densite_sec": 750, "psf": 30},
-    {"code": "ALB", "nom": "Alisier blanc", "nom_latin": "Sorbus aria", "densite_frais": 950, "densite_sec": 750, "psf": 30},
-    {"code": "COR", "nom": "Cormier", "nom_latin": "Sorbus domestica", "densite_frais": 950, "densite_sec": 750, "psf": 30},
-    {"code": "AUN", "nom": "Aulne glutineux", "nom_latin": "Alnus glutinosa", "densite_frais": 850, "densite_sec": 530, "psf": 29},
-    {"code": "ORM", "nom": "Orme", "nom_latin": "Ulmus", "densite_frais": 950, "densite_sec": 680, "psf": 28},
-    {"code": "EPC", "nom": "Épicéa commun", "nom_latin": "Picea abies", "densite_frais": 860, "densite_sec": 470, "psf": 30},
-    {"code": "DOU", "nom": "Douglas", "nom_latin": "Pseudotsuga menziesii", "densite_frais": 850, "densite_sec": 530, "psf": 26},
-    {"code": "MEE", "nom": "Mélèze d'Europe", "nom_latin": "Larix decidua", "densite_frais": 900, "densite_sec": 590, "psf": 28},
-    {"code": "PIS", "nom": "Pin sylvestre", "nom_latin": "Pinus sylvestris", "densite_frais": 850, "densite_sec": 520, "psf": 28},
-    {"code": "PIM", "nom": "Pin maritime", "nom_latin": "Pinus pinaster", "densite_frais": 900, "densite_sec": 530, "psf": 29},
-    {"code": "PIN", "nom": "Pin noir", "nom_latin": "Pinus nigra", "densite_frais": 900, "densite_sec": 550, "psf": 28},
-    {"code": "SAP", "nom": "Sapin pectiné", "nom_latin": "Abies alba", "densite_frais": 850, "densite_sec": 450, "psf": 30},
+    # Feuillus - Bois nerveux (retrait élevé)
+    {"code": "HET", "nom": "Hêtre", "nom_latin": "Fagus sylvatica", "densite_frais": 950, "densite_sec": 650, "psf": 32, "retrait_t": 11.8},
+    {"code": "CHA", "nom": "Charme", "nom_latin": "Carpinus betulus", "densite_frais": 1000, "densite_sec": 750, "psf": 30, "retrait_t": 11.5},
+    # Feuillus - Chênes
+    {"code": "CHE", "nom": "Chêne indigène", "nom_latin": "Quercus", "densite_frais": 1070, "densite_sec": 720, "psf": 29, "retrait_t": 10.0},
+    {"code": "CHS", "nom": "Chêne sessile", "nom_latin": "Quercus petraea", "densite_frais": 1070, "densite_sec": 720, "psf": 29, "retrait_t": 9.8},
+    {"code": "CHP", "nom": "Chêne pédonculé", "nom_latin": "Quercus robur", "densite_frais": 1070, "densite_sec": 720, "psf": 29, "retrait_t": 10.2},
+    # Feuillus - Frênes
+    {"code": "FRE", "nom": "Frêne", "nom_latin": "Fraxinus", "densite_frais": 920, "densite_sec": 680, "psf": 28, "retrait_t": 8.0},
+    {"code": "FRC", "nom": "Frêne commun", "nom_latin": "Fraxinus excelsior", "densite_frais": 920, "densite_sec": 680, "psf": 28, "retrait_t": 8.0},
+    # Feuillus - Divers
+    {"code": "CHT", "nom": "Châtaignier", "nom_latin": "Castanea sativa", "densite_frais": 950, "densite_sec": 590, "psf": 30, "retrait_t": 6.5},
+    {"code": "MER", "nom": "Merisier", "nom_latin": "Prunus avium", "densite_frais": 900, "densite_sec": 620, "psf": 29, "retrait_t": 7.5},
+    {"code": "NOY", "nom": "Noyer", "nom_latin": "Juglans regia", "densite_frais": 900, "densite_sec": 680, "psf": 27, "retrait_t": 7.5},
+    {"code": "ROB", "nom": "Robinier", "nom_latin": "Robinia pseudoacacia", "densite_frais": 950, "densite_sec": 770, "psf": 26, "retrait_t": 5.0},
+    # Feuillus - Érables
+    {"code": "ERP", "nom": "Érable plane", "nom_latin": "Acer platanoides", "densite_frais": 900, "densite_sec": 650, "psf": 29, "retrait_t": 8.0},
+    {"code": "ERC", "nom": "Érable champêtre", "nom_latin": "Acer campestre", "densite_frais": 900, "densite_sec": 650, "psf": 29, "retrait_t": 7.8},
+    {"code": "ERS", "nom": "Érable sycomore", "nom_latin": "Acer pseudoplatanus", "densite_frais": 900, "densite_sec": 650, "psf": 29, "retrait_t": 8.5},
+    # Feuillus - Bois blancs
+    {"code": "BOU", "nom": "Bouleau", "nom_latin": "Betula", "densite_frais": 850, "densite_sec": 650, "psf": 28, "retrait_t": 7.5},
+    {"code": "TRE", "nom": "Tremble", "nom_latin": "Populus tremula", "densite_frais": 800, "densite_sec": 500, "psf": 29, "retrait_t": 8.5},
+    {"code": "PEU", "nom": "Peuplier", "nom_latin": "Populus", "densite_frais": 800, "densite_sec": 450, "psf": 29, "retrait_t": 8.5},
+    {"code": "TIL", "nom": "Tilleul", "nom_latin": "Tilia", "densite_frais": 800, "densite_sec": 530, "psf": 31, "retrait_t": 9.5},
+    {"code": "AUN", "nom": "Aulne glutineux", "nom_latin": "Alnus glutinosa", "densite_frais": 850, "densite_sec": 530, "psf": 29, "retrait_t": 7.3},
+    # Feuillus - Fruitiers et Sorbus
+    {"code": "ALT", "nom": "Alisier torminal", "nom_latin": "Sorbus torminalis", "densite_frais": 950, "densite_sec": 750, "psf": 30, "retrait_t": 10.0},
+    {"code": "ALB", "nom": "Alisier blanc", "nom_latin": "Sorbus aria", "densite_frais": 950, "densite_sec": 750, "psf": 30, "retrait_t": 9.5},
+    {"code": "COR", "nom": "Cormier", "nom_latin": "Sorbus domestica", "densite_frais": 950, "densite_sec": 750, "psf": 30, "retrait_t": 10.5},
+    {"code": "ORM", "nom": "Orme", "nom_latin": "Ulmus", "densite_frais": 950, "densite_sec": 680, "psf": 28, "retrait_t": 8.0},
+    # Résineux
+    {"code": "EPC", "nom": "Épicéa commun", "nom_latin": "Picea abies", "densite_frais": 860, "densite_sec": 470, "psf": 30, "retrait_t": 8.0},
+    {"code": "DOU", "nom": "Douglas", "nom_latin": "Pseudotsuga menziesii", "densite_frais": 850, "densite_sec": 530, "psf": 26, "retrait_t": 7.6},
+    {"code": "MEE", "nom": "Mélèze d'Europe", "nom_latin": "Larix decidua", "densite_frais": 900, "densite_sec": 590, "psf": 28, "retrait_t": 7.8},
+    {"code": "PIS", "nom": "Pin sylvestre", "nom_latin": "Pinus sylvestris", "densite_frais": 850, "densite_sec": 520, "psf": 28, "retrait_t": 7.5},
+    {"code": "PIM", "nom": "Pin maritime", "nom_latin": "Pinus pinaster", "densite_frais": 900, "densite_sec": 530, "psf": 29, "retrait_t": 8.0},
+    {"code": "PIN", "nom": "Pin noir", "nom_latin": "Pinus nigra", "densite_frais": 900, "densite_sec": 550, "psf": 28, "retrait_t": 7.5},
+    {"code": "SAP", "nom": "Sapin pectiné", "nom_latin": "Abies alba", "densite_frais": 850, "densite_sec": 450, "psf": 30, "retrait_t": 7.5},
 ]
 
 PRODUITS_DATA = [
@@ -80,64 +89,57 @@ PRODUITS_DATA = [
     {"code": "PNX", "nom": "Panneaux"},
 ]
 
-# Épaisseurs calculées: retrait tangentiel PSF → 10% humidité
-# Formule: ep_frais = ep_sec / (1 - retrait_effectif)
-EPAISSEURS_DATA = [
-    # Hêtre (retrait 12% → 8% effectif)
-    {"essence": "HET", "ep_frais": 29, "ep_sec": 27},
-    {"essence": "HET", "ep_frais": 35, "ep_sec": 32},
-    {"essence": "HET", "ep_frais": 49, "ep_sec": 45},
-    {"essence": "HET", "ep_frais": 54, "ep_sec": 50},
-    {"essence": "HET", "ep_frais": 87, "ep_sec": 80},
-    # Chêne (retrait 10% → 6.7% effectif)
-    {"essence": "CHE", "ep_frais": 29, "ep_sec": 27},
-    {"essence": "CHE", "ep_frais": 34, "ep_sec": 32},
-    {"essence": "CHE", "ep_frais": 48, "ep_sec": 45},
-    {"essence": "CHE", "ep_frais": 54, "ep_sec": 50},
-    {"essence": "CHE", "ep_frais": 86, "ep_sec": 80},
-    # Frêne (retrait 8% → 5.3% effectif)
-    {"essence": "FRE", "ep_frais": 29, "ep_sec": 27},
-    {"essence": "FRE", "ep_frais": 34, "ep_sec": 32},
-    {"essence": "FRE", "ep_frais": 48, "ep_sec": 45},
-    {"essence": "FRE", "ep_frais": 53, "ep_sec": 50},
-    {"essence": "FRE", "ep_frais": 84, "ep_sec": 80},
-    # Érable sycomore (retrait 8% → 5.3% effectif)
-    {"essence": "ERS", "ep_frais": 29, "ep_sec": 27},
-    {"essence": "ERS", "ep_frais": 34, "ep_sec": 32},
-    {"essence": "ERS", "ep_frais": 48, "ep_sec": 45},
-    {"essence": "ERS", "ep_frais": 53, "ep_sec": 50},
-    {"essence": "ERS", "ep_frais": 84, "ep_sec": 80},
-    # Merisier (retrait 10% → 6.7% effectif)
-    {"essence": "MER", "ep_frais": 29, "ep_sec": 27},
-    {"essence": "MER", "ep_frais": 34, "ep_sec": 32},
-    {"essence": "MER", "ep_frais": 48, "ep_sec": 45},
-    {"essence": "MER", "ep_frais": 54, "ep_sec": 50},
-    {"essence": "MER", "ep_frais": 86, "ep_sec": 80},
-    # Noyer (retrait 7.5% → 5% effectif)
-    {"essence": "NOY", "ep_frais": 28, "ep_sec": 27},
-    {"essence": "NOY", "ep_frais": 34, "ep_sec": 32},
-    {"essence": "NOY", "ep_frais": 47, "ep_sec": 45},
-    {"essence": "NOY", "ep_frais": 53, "ep_sec": 50},
-    {"essence": "NOY", "ep_frais": 84, "ep_sec": 80},
-    # Châtaignier (retrait 8% → 5.3% effectif)
-    {"essence": "CHT", "ep_frais": 29, "ep_sec": 27},
-    {"essence": "CHT", "ep_frais": 34, "ep_sec": 32},
-    {"essence": "CHT", "ep_frais": 48, "ep_sec": 45},
-    {"essence": "CHT", "ep_frais": 53, "ep_sec": 50},
-    {"essence": "CHT", "ep_frais": 84, "ep_sec": 80},
-    # Charme (retrait 11.5% → 7.7% effectif)
-    {"essence": "CHA", "ep_frais": 29, "ep_sec": 27},
-    {"essence": "CHA", "ep_frais": 35, "ep_sec": 32},
-    {"essence": "CHA", "ep_frais": 49, "ep_sec": 45},
-    {"essence": "CHA", "ep_frais": 54, "ep_sec": 50},
-    {"essence": "CHA", "ep_frais": 87, "ep_sec": 80},
-    # Peuplier (retrait 8.5% → 5.7% effectif)
-    {"essence": "PEU", "ep_frais": 29, "ep_sec": 27},
-    {"essence": "PEU", "ep_frais": 34, "ep_sec": 32},
-    {"essence": "PEU", "ep_frais": 48, "ep_sec": 45},
-    {"essence": "PEU", "ep_frais": 53, "ep_sec": 50},
-    {"essence": "PEU", "ep_frais": 85, "ep_sec": 80},
-]
+# ============================================================================
+# CALCUL AUTOMATIQUE DES ÉPAISSEURS
+# ============================================================================
+# Siccité cible: 8% (standard min 8%, max 10%)
+# Formule: retrait_effectif = retrait_t × (PSF - H_cible) / PSF
+#          ep_frais = ep_sec / (1 - retrait_effectif)
+
+HUMIDITE_CIBLE = 8  # %
+EPAISSEURS_CIBLES = [27, 32, 45, 50, 80]  # mm sec
+
+
+def _calculer_epaisseurs():
+    """Calcule les épaisseurs frais pour chaque essence et épaisseur sèche cible"""
+    result = []
+    for ess in ESSENCES_DATA:
+        code = ess["code"]
+        psf = ess["psf"]
+        retrait_t = ess["retrait_t"]
+        # Retrait effectif de PSF → 8%
+        retrait_eff = (retrait_t / 100) * (psf - HUMIDITE_CIBLE) / psf
+        for ep_sec in EPAISSEURS_CIBLES:
+            ep_frais = round(ep_sec / (1 - retrait_eff))
+            result.append({"essence": code, "ep_frais": ep_frais, "ep_sec": ep_sec})
+    return result
+
+
+EPAISSEURS_DATA = _calculer_epaisseurs()
+
+
+def _afficher_tableau_epaisseurs():
+    """Affiche le tableau des épaisseurs au démarrage"""
+    print("\n" + "=" * 85)
+    print("  📐 TABLEAU DES ÉPAISSEURS (frais → sec à 8%)")
+    print("=" * 85)
+    print(f"{'Essence':<8} {'PSF':>4} {'Ret.T':>6} │ " + " │ ".join(f"{e:>2}mm" for e in EPAISSEURS_CIBLES))
+    print("-" * 85)
+    for ess in ESSENCES_DATA:
+        code = ess["code"]
+        psf = ess["psf"]
+        rt = ess["retrait_t"]
+        eps = [e for e in EPAISSEURS_DATA if e["essence"] == code]
+        vals = " │ ".join(f"{e['ep_frais']:>4}" for e in eps)
+        print(f"{code:<8} {psf:>3}% {rt:>5.1f}% │ {vals}")
+    print("=" * 85)
+    print(f"  Légende: épaisseur frais (mm) pour obtenir {EPAISSEURS_CIBLES} mm sec à {HUMIDITE_CIBLE}%")
+    print()
+
+
+# ============================================================================
+# CONFIGURATION PAR DÉFAUT
+# ============================================================================
 
 DEFAULT_CONFIG = {
     'printers': [
@@ -178,9 +180,10 @@ DEFAULT_CONFIG = {
                 {'id': 'code', 'nom': 'Code', 'type': 'text'},
                 {'id': 'nom', 'nom': 'Nom', 'type': 'text'},
                 {'id': 'nom_latin', 'nom': 'Nom latin', 'type': 'text'},
-                {'id': 'densite_frais', 'nom': 'Densité frais (kg/m³)', 'type': 'number'},
-                {'id': 'densite_sec', 'nom': 'Densité sec (kg/m³)', 'type': 'number'},
-                {'id': 'psf', 'nom': 'PSF (%)', 'type': 'number'}
+                {'id': 'densite_frais', 'nom': 'Densité frais', 'type': 'number'},
+                {'id': 'densite_sec', 'nom': 'Densité sec', 'type': 'number'},
+                {'id': 'psf', 'nom': 'PSF %', 'type': 'number'},
+                {'id': 'retrait_t', 'nom': 'Retrait T %', 'type': 'number'}
             ]
         },
         {
@@ -292,7 +295,7 @@ def init_users_sheet():
 
 
 def init_reference_tables():
-    """Initialise les tables de référence si elles sont vides"""
+    """Initialise les tables de référence si vides"""
     if spreadsheet is None:
         return
     
@@ -574,7 +577,6 @@ def generate_zpl(poste: dict, data: dict, source: str = '') -> str:
     numero = format_numero(compteur)
     qr_data = f"{prefixe}{serie}-{format_numero(compteur, spaced=False)}"
     
-    # Lignes d'information
     lines = []
     y = 180
     
@@ -1187,8 +1189,9 @@ init_google_sheets()
 init_reference_tables()
 
 if __name__ == '__main__':
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("  MALLO BOIS - WoodStock")
     print("  http://localhost:5000")
-    print("="*50 + "\n")
+    print("=" * 50)
+    _afficher_tableau_epaisseurs()
     app.run(host='0.0.0.0', port=5000, debug=True)
