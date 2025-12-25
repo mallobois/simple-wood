@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ poste.nom }} - MALLO BOIS</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -80,6 +81,11 @@
             outline: none;
             border-color: #007aff;
         }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 0.75rem;
+        }
         .copies-row {
             display: flex;
             align-items: center;
@@ -127,6 +133,104 @@
         .message.show { display: block; }
         .message.success { background: #d4edda; color: #155724; }
         .message.error { background: #f8d7da; color: #721c24; }
+        
+        /* Source selector */
+        .source-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border: 2px solid #007aff;
+        }
+        .source-section h2 {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #007aff;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        .source-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .source-tab {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e5e5e7;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+        }
+        .source-tab.active {
+            border-color: #007aff;
+            background: #e8f4fd;
+            color: #007aff;
+        }
+        .source-content { display: none; }
+        .source-content.active { display: block; }
+        
+        .selected-source {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        .selected-source.show { display: block; }
+        .selected-source .label {
+            font-size: 0.7rem;
+            color: #2e7d32;
+            text-transform: uppercase;
+        }
+        .selected-source .value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'SF Mono', monospace;
+            color: #1b5e20;
+        }
+        .selected-source .clear {
+            float: right;
+            background: none;
+            border: none;
+            color: #2e7d32;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        /* Scanner QR */
+        .scan-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #007aff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .scan-btn:hover { background: #0066d6; }
+        .scan-btn.active { background: #ff3b30; }
+        
+        #qr-reader {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 1rem;
+            display: none;
+        }
+        #qr-reader.show { display: block; }
     </style>
 </head>
 <body>
@@ -135,8 +239,8 @@
         <h1>{{ poste.nom }}</h1>
         <div class="header-actions">
             {% if session.get('user_droits') == 'admin' %}
-            <a href="/poste/{{ poste.id }}/liste" class="header-btn">📋 Historique</a>
-            <a href="/poste/{{ poste.id }}/parametres" class="header-btn">⚙️ Config</a>
+            <a href="/poste/{{ poste.id }}/liste" class="header-btn">📋</a>
+            <a href="/poste/{{ poste.id }}/parametres" class="header-btn">⚙️</a>
             {% endif %}
         </div>
     </header>
@@ -144,8 +248,53 @@
     <main>
         <div id="message" class="message"></div>
 
+        {% if poste.source_poste %}
+        <!-- Sélection source (tronçon) -->
+        <div class="source-section">
+            <h2>Tronçon source</h2>
+            
+            <div class="source-tabs">
+                <button class="source-tab active" onclick="switchSourceTab('manual')">📝 Saisie</button>
+                <button class="source-tab" onclick="switchSourceTab('scan')">📷 Scanner</button>
+            </div>
+            
+            <!-- Saisie manuelle -->
+            <div class="source-content active" id="source-manual">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Série</label>
+                        <select id="source-serie" onchange="loadNumeros()">
+                            <option value="">--</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Numéro</label>
+                        <select id="source-numero" onchange="selectSource()">
+                            <option value="">-- Choisir série --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Scanner -->
+            <div class="source-content" id="source-scan">
+                <button class="scan-btn" id="scan-btn" onclick="toggleScanner()">
+                    📷 Activer la caméra
+                </button>
+                <div id="qr-reader"></div>
+            </div>
+            
+            <!-- Source sélectionnée -->
+            <div class="selected-source" id="selected-source">
+                <button class="clear" onclick="clearSource()">✕</button>
+                <div class="label">Tronçon sélectionné</div>
+                <div class="value" id="source-value"></div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="numero-display">
-            <div class="numero-label">Prochain numéro</div>
+            <div class="numero-label">Prochain numéro {{ poste.nom }}</div>
             <div class="numero-value" id="numero">{{ '%02d %02d %02d' % (poste.compteur // 10000, (poste.compteur // 100) % 100, poste.compteur % 100) }}</div>
             <div class="numero-serie">Série {{ poste.serie }} · {{ poste.prefixe or '' }}</div>
         </div>
@@ -192,7 +341,95 @@
     <script>
         const posteId = '{{ poste.id }}';
         const champs = {{ poste.champs | tojson }};
+        const sourcePoste = '{{ poste.source_poste or "" }}';
         let compteur = {{ poste.compteur }};
+        let scanner = null;
+        let isScanning = false;
+        let selectedSource = null;
+        let seriesData = {};
+
+        // Charger les séries si poste source
+        if (sourcePoste) {
+            loadSeries();
+        }
+
+        async function loadSeries() {
+            try {
+                const res = await fetch('/api/poste/' + sourcePoste + '/series');
+                seriesData = await res.json();
+                
+                const select = document.getElementById('source-serie');
+                select.innerHTML = '<option value="">-- Série --</option>';
+                
+                // Trier les séries (plus récentes en premier)
+                const series = Object.keys(seriesData).sort().reverse();
+                series.forEach(s => {
+                    select.innerHTML += `<option value="${s}">${s}</option>`;
+                });
+            } catch (e) {
+                console.error('Erreur chargement séries:', e);
+            }
+        }
+
+        function loadNumeros() {
+            const serie = document.getElementById('source-serie').value;
+            const select = document.getElementById('source-numero');
+            
+            if (!serie || !seriesData[serie]) {
+                select.innerHTML = '<option value="">-- Choisir série --</option>';
+                return;
+            }
+            
+            select.innerHTML = '<option value="">-- Numéro --</option>';
+            // Afficher les numéros les plus récents en premier
+            const numeros = seriesData[serie].slice().reverse();
+            numeros.forEach(n => {
+                const formatted = n.padStart(6, '0');
+                const display = `${formatted.slice(0,2)} ${formatted.slice(2,4)} ${formatted.slice(4,6)}`;
+                select.innerHTML += `<option value="${n}">${display}</option>`;
+            });
+        }
+
+        function selectSource() {
+            const serie = document.getElementById('source-serie').value;
+            const numero = document.getElementById('source-numero').value;
+            
+            if (serie && numero) {
+                const formatted = numero.padStart(6, '0');
+                const display = `${formatted.slice(0,2)} ${formatted.slice(2,4)} ${formatted.slice(4,6)}`;
+                setSelectedSource(`TRO-${serie}-${numero}`, `${serie} / ${display}`);
+            }
+        }
+
+        function setSelectedSource(code, display) {
+            selectedSource = code;
+            document.getElementById('source-value').textContent = display || code;
+            document.getElementById('selected-source').classList.add('show');
+            
+            // Vibrer si supporté
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
+        }
+
+        function clearSource() {
+            selectedSource = null;
+            document.getElementById('selected-source').classList.remove('show');
+            document.getElementById('source-serie').value = '';
+            document.getElementById('source-numero').innerHTML = '<option value="">-- Choisir série --</option>';
+        }
+
+        function switchSourceTab(tab) {
+            document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.source-content').forEach(c => c.classList.remove('active'));
+            
+            document.querySelector(`.source-tab:nth-child(${tab === 'manual' ? 1 : 2})`).classList.add('active');
+            document.getElementById('source-' + tab).classList.add('active');
+            
+            if (tab === 'manual' && isScanning) {
+                stopScanner();
+            }
+        }
 
         function updateNumero() {
             const n = compteur;
@@ -200,17 +437,112 @@
             document.getElementById('numero').textContent = `${s.slice(0,2)} ${s.slice(2,4)} ${s.slice(4,6)}`;
         }
 
+        // ===== QR Scanner =====
+        function toggleScanner() {
+            if (isScanning) {
+                stopScanner();
+            } else {
+                startScanner();
+            }
+        }
+
+        function startScanner() {
+            const btn = document.getElementById('scan-btn');
+            const reader = document.getElementById('qr-reader');
+            
+            btn.innerHTML = '⏹️ Arrêter';
+            btn.classList.add('active');
+            reader.classList.add('show');
+            isScanning = true;
+
+            scanner = new Html5Qrcode("qr-reader");
+            
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1
+            };
+
+            Html5Qrcode.getCameras().then(cameras => {
+                if (cameras && cameras.length) {
+                    let cameraId = cameras[0].id;
+                    for (const cam of cameras) {
+                        if (cam.label.toLowerCase().includes('back') || 
+                            cam.label.toLowerCase().includes('arrière') ||
+                            cam.label.toLowerCase().includes('rear')) {
+                            cameraId = cam.id;
+                            break;
+                        }
+                    }
+                    
+                    scanner.start(cameraId, config, onScanSuccess, () => {})
+                        .catch(err => {
+                            showMessage("Erreur caméra: " + err, 'error');
+                            stopScanner();
+                        });
+                }
+            }).catch(err => {
+                showMessage("Impossible d'accéder à la caméra", 'error');
+                stopScanner();
+            });
+        }
+
+        function stopScanner() {
+            const btn = document.getElementById('scan-btn');
+            const reader = document.getElementById('qr-reader');
+            
+            btn.innerHTML = '📷 Activer la caméra';
+            btn.classList.remove('active');
+            reader.classList.remove('show');
+            isScanning = false;
+
+            if (scanner) {
+                scanner.stop().then(() => scanner.clear()).catch(() => {});
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            console.log("QR scanné:", decodedText);
+            
+            // Vibrer
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            }
+            
+            // Parser le QR code (format: TRO-2501-000123)
+            const match = decodedText.match(/^([A-Z]{3})-(\d+)-(\d+)$/);
+            if (match) {
+                const serie = match[2];
+                const numero = match[3];
+                const formatted = numero.padStart(6, '0');
+                const display = `${serie} / ${formatted.slice(0,2)} ${formatted.slice(2,4)} ${formatted.slice(4,6)}`;
+                setSelectedSource(decodedText, display);
+            } else {
+                setSelectedSource(decodedText, decodedText);
+            }
+            
+            stopScanner();
+            showMessage('QR Code scanné !', 'success');
+        }
+
+        // ===== Impression =====
         async function doPrint() {
+            // Vérifier source si requis
+            if (sourcePoste && !selectedSource) {
+                showMessage('Veuillez sélectionner un tronçon source', 'error');
+                return;
+            }
+            
             const btn = document.getElementById('btn-print');
             btn.disabled = true;
             btn.textContent = '⏳ En cours...';
 
             const data = {
                 imprimer: document.getElementById('imprimer').checked,
-                copies: parseInt(document.getElementById('copies').value) || 1
+                copies: parseInt(document.getElementById('copies').value) || 1,
+                source: selectedSource
             };
 
-            // Collecter les champs
             champs.forEach(c => {
                 const el = document.getElementById('field-' + c.id);
                 if (el) data[c.id] = el.value;
@@ -229,13 +561,14 @@
                 if (result.success) {
                     compteur = result.compteur;
                     updateNumero();
-                    // Reset champs texte
                     champs.forEach(c => {
                         if (c.type !== 'select') {
                             const el = document.getElementById('field-' + c.id);
                             if (el) el.value = '';
                         }
                     });
+                    // Reset source après impression réussie
+                    clearSource();
                 }
             } catch (e) {
                 showMessage('Erreur de communication', 'error');
@@ -252,7 +585,6 @@
             setTimeout(() => msg.classList.remove('show'), 4000);
         }
 
-        // Raccourci Entrée
         document.addEventListener('keypress', e => {
             if (e.key === 'Enter' && !document.getElementById('btn-print').disabled) {
                 doPrint();

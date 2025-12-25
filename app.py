@@ -92,8 +92,10 @@ def get_or_create_poste_sheet(poste_id: str, poste_config: dict):
         return spreadsheet.worksheet(sheet_name)
     except gspread.WorksheetNotFound:
         sheet = spreadsheet.add_worksheet(title=sheet_name, rows=1000, cols=20)
-        # En-têtes: Date, Heure, Numéro, champs dynamiques..., Copies, Opérateur
+        # En-têtes: Date, Heure, Série, Numéro, [Source si applicable], champs dynamiques..., Copies, Opérateur
         headers = ['Date', 'Heure', 'Série', 'Numéro']
+        if poste_config.get('source_poste'):
+            headers.append('Source')
         for field in poste_config.get('champs', []):
             headers.append(field['nom'])
         headers.extend(['Copies', 'Opérateur'])
@@ -114,6 +116,8 @@ def log_to_poste_sheet(poste_id: str, poste_config: dict, data: dict, copies: in
             poste_config.get('serie', '2501'),
             data.get('numero', '')
         ]
+        if poste_config.get('source_poste'):
+            row.append(data.get('source', ''))
         for field in poste_config.get('champs', []):
             row.append(data.get(field['id'], ''))
         row.extend([copies, operateur])
@@ -282,6 +286,18 @@ DEFAULT_CONFIG = {
             'printer': 'zebra1',
             'copies_defaut': 1,
             'champs': []
+        },
+        {
+            'id': 'sciage',
+            'nom': 'Sciage',
+            'description': 'Découpe des tronçons',
+            'serie': '2501',
+            'compteur': 0,
+            'prefixe': 'SCI-',
+            'printer': 'zebra1',
+            'copies_defaut': 1,
+            'source_poste': 'troncons',
+            'champs': []
         }
     ],
     'tables': [
@@ -387,7 +403,7 @@ def format_numero_compact(n: int) -> str:
     return f"{n:06d}"
 
 
-def generate_zpl(poste: dict, data: dict) -> str:
+def generate_zpl(poste: dict, data: dict, source: str = '') -> str:
     """Génère le code ZPL pour un poste"""
     serie = poste.get('serie', '2501')
     compteur = poste.get('compteur', 0)
@@ -398,6 +414,12 @@ def generate_zpl(poste: dict, data: dict) -> str:
     # Construction des lignes de champs
     champs_zpl = ""
     y_pos = 180
+    
+    # Ajouter la source si présente
+    if source:
+        champs_zpl += f"^FO400,{y_pos}^A0N,20,20^FDSource: {source}^FS\n"
+        y_pos += 28
+    
     for field in poste.get('champs', []):
         value = data.get(field['id'], '')
         if value:
@@ -496,7 +518,8 @@ def page_poste_params(poste_id):
     if not poste:
         return redirect(url_for('index'))
     printers = config.get('printers', [])
-    return render_template('poste_parametres.html', poste=poste, printers=printers)
+    all_postes = config.get('postes', [])
+    return render_template('poste_parametres.html', poste=poste, printers=printers, all_postes=all_postes)
 
 
 @app.route('/poste/<poste_id>/liste')
@@ -758,6 +781,7 @@ def api_update_poste(poste_id):
             p['prefixe'] = data.get('prefixe', p.get('prefixe', ''))
             p['printer'] = data.get('printer', p['printer'])
             p['copies_defaut'] = int(data.get('copies_defaut', p.get('copies_defaut', 1)))
+            p['source_poste'] = data.get('source_poste', p.get('source_poste', ''))
             if 'compteur' in data:
                 p['compteur'] = int(data['compteur']) % 1000000
             if 'champs' in data:
@@ -898,9 +922,10 @@ def api_print(poste_id):
     imprimer = data.get('imprimer', True)
     copies = int(data.get('copies', poste.get('copies_defaut', 1)))
     copies = min(max(copies, 0), 50)
+    source = data.get('source', '')  # Tronçon source si applicable
     
     numero_imprime = format_numero(poste['compteur'])
-    zpl = generate_zpl(poste, data)
+    zpl = generate_zpl(poste, data, source)
     printer = get_printer(config, poste.get('printer', 'zebra1'))
     
     printed = 0
@@ -919,9 +944,10 @@ def api_print(poste_id):
                 'compteur': poste['compteur']
             })
     
-    # Log et incrément
+    # Log avec source
     log_data = data.copy()
     log_data['numero'] = format_numero_compact(poste['compteur'])
+    log_data['source'] = source
     log_to_poste_sheet(poste_id, poste, log_data, copies if imprimer else 0, session.get('user_nom', 'Inconnu'))
     
     # Incrémenter compteur
@@ -943,6 +969,29 @@ def api_print(poste_id):
 def api_poste_history(poste_id):
     history = get_poste_history(poste_id)
     return jsonify(history)
+
+
+@app.route('/api/poste/<poste_id>/series', methods=['GET'])
+def api_poste_series(poste_id):
+    """Récupère les séries et numéros disponibles pour un poste source"""
+    history = get_poste_history(poste_id, limit=500)
+    
+    # Grouper par série
+    series = {}
+    for row in history:
+        serie = str(row.get('Série', ''))
+        numero = str(row.get('Numéro', ''))
+        if serie and numero:
+            if serie not in series:
+                series[serie] = []
+            if numero not in series[serie]:
+                series[serie].append(numero)
+    
+    # Trier les numéros
+    for serie in series:
+        series[serie].sort()
+    
+    return jsonify(series)
 
 
 # ============== API SYSTEME ==============
