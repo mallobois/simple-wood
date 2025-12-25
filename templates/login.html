@@ -329,9 +329,14 @@
         }
 
         async function tryLogin() {
-            if (!selectedUser || pin.length < MIN_PIN) return;
+            console.log('tryLogin called', selectedUser, pin);
+            if (!selectedUser || pin.length < MIN_PIN) {
+                console.log('Validation failed');
+                return;
+            }
 
             try {
+                console.log('Sending request...');
                 const res = await fetch('/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -341,6 +346,7 @@
                     })
                 });
                 const data = await res.json();
+                console.log('Response:', data);
 
                 if (data.success) {
                     window.location.href = '/';
@@ -351,6 +357,7 @@
                     updatePinDisplay();
                 }
             } catch (e) {
+                console.error('Error:', e);
                 showMessage('Erreur de communication');
             }
         }
