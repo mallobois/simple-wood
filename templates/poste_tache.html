@@ -310,19 +310,25 @@
         {% endif %}
 
         {% if poste.type_produit %}
-        <!-- Essence et Qualité -->
+        <!-- Essence, Qualité et Épaisseur -->
         <div class="product-section">
             <h2>Produit</h2>
+            <div class="form-group">
+                <label>Essence</label>
+                <select id="essence" onchange="loadQualitesEtEpaisseurs()">
+                    <option value="">-- Choisir --</option>
+                </select>
+            </div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>Essence</label>
-                    <select id="essence" onchange="loadQualites()">
-                        <option value="">-- Choisir --</option>
-                    </select>
-                </div>
                 <div class="form-group">
                     <label>Qualité</label>
                     <select id="qualite">
+                        <option value="">-- Choisir essence --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Épaisseur</label>
+                    <select id="epaisseur">
                         <option value="">-- Choisir essence --</option>
                     </select>
                 </div>
@@ -387,6 +393,7 @@
         let seriesData = {};
         let essences = [];
         let qualites = [];
+        let epaisseurs = [];
 
         document.addEventListener('DOMContentLoaded', init);
 
@@ -399,7 +406,7 @@
             }
         }
 
-        // ===== Essences & Qualités =====
+        // ===== Essences, Qualités & Épaisseurs =====
         async function loadEssences() {
             try {
                 const res = await fetch('/api/tables/essences/values');
@@ -417,32 +424,57 @@
             }
         }
 
-        async function loadQualites() {
+        async function loadQualitesEtEpaisseurs() {
             const essenceCode = document.getElementById('essence').value;
-            const select = document.getElementById('qualite');
             
+            // Charger qualités
+            const selectQualite = document.getElementById('qualite');
             if (!essenceCode || !typeProduit) {
-                select.innerHTML = '<option value="">-- Choisir essence --</option>';
-                return;
+                selectQualite.innerHTML = '<option value="">-- Choisir essence --</option>';
+            } else {
+                try {
+                    const res = await fetch(`/api/qualites/${essenceCode}/${typeProduit}`);
+                    qualites = await res.json();
+                    
+                    selectQualite.innerHTML = '<option value="">-- Choisir --</option>';
+                    if (qualites.length === 0) {
+                        selectQualite.innerHTML = '<option value="">Aucune qualité</option>';
+                    } else {
+                        qualites.forEach(q => {
+                            const code = q.Code || q.code || '';
+                            const nom = q.Nom || q.nom || code;
+                            selectQualite.innerHTML += `<option value="${code}">${code} - ${nom}</option>`;
+                        });
+                    }
+                } catch (e) {
+                    console.error('Erreur chargement qualités:', e);
+                    selectQualite.innerHTML = '<option value="">Erreur</option>';
+                }
             }
             
-            try {
-                const res = await fetch(`/api/qualites/${essenceCode}/${typeProduit}`);
-                qualites = await res.json();
-                
-                select.innerHTML = '<option value="">-- Choisir --</option>';
-                if (qualites.length === 0) {
-                    select.innerHTML = '<option value="">Aucune qualité définie</option>';
-                } else {
-                    qualites.forEach(q => {
-                        const code = q.Code || q.code || '';
-                        const nom = q.Nom || q.nom || code;
-                        select.innerHTML += `<option value="${code}">${code} - ${nom}</option>`;
-                    });
+            // Charger épaisseurs
+            const selectEpaisseur = document.getElementById('epaisseur');
+            if (!essenceCode) {
+                selectEpaisseur.innerHTML = '<option value="">-- Choisir essence --</option>';
+            } else {
+                try {
+                    const res = await fetch(`/api/epaisseurs/${essenceCode}`);
+                    epaisseurs = await res.json();
+                    
+                    selectEpaisseur.innerHTML = '<option value="">-- Choisir --</option>';
+                    if (epaisseurs.length === 0) {
+                        selectEpaisseur.innerHTML = '<option value="">Aucune épaisseur</option>';
+                    } else {
+                        epaisseurs.forEach(ep => {
+                            const frais = ep['Épaisseur frais (mm)'] || ep.ep_frais || '';
+                            const sec = ep['Épaisseur sec (mm)'] || ep.ep_sec || '';
+                            selectEpaisseur.innerHTML += `<option value="${frais}/${sec}">${frais} mm → ${sec} mm</option>`;
+                        });
+                    }
+                } catch (e) {
+                    console.error('Erreur chargement épaisseurs:', e);
+                    selectEpaisseur.innerHTML = '<option value="">Erreur</option>';
                 }
-            } catch (e) {
-                console.error('Erreur chargement qualités:', e);
-                select.innerHTML = '<option value="">Erreur</option>';
             }
         }
 
@@ -625,12 +657,17 @@
             if (typeProduit) {
                 const essence = document.getElementById('essence').value;
                 const qualite = document.getElementById('qualite').value;
+                const epaisseur = document.getElementById('epaisseur').value;
                 if (!essence) {
                     showMessage('Veuillez sélectionner une essence', 'error');
                     return;
                 }
                 if (!qualite && qualites.length > 0) {
                     showMessage('Veuillez sélectionner une qualité', 'error');
+                    return;
+                }
+                if (!epaisseur && epaisseurs.length > 0) {
+                    showMessage('Veuillez sélectionner une épaisseur', 'error');
                     return;
                 }
             }
@@ -645,10 +682,11 @@
                 source: selectedSource
             };
             
-            // Ajouter essence et qualité
+            // Ajouter essence, qualité et épaisseur
             if (typeProduit) {
                 data.essence = document.getElementById('essence').value;
                 data.qualite = document.getElementById('qualite').value;
+                data.epaisseur = document.getElementById('epaisseur').value;
             }
 
             champs.forEach(c => {

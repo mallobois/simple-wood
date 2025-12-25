@@ -92,10 +92,10 @@ def get_or_create_poste_sheet(poste_id: str, poste_config: dict):
         return spreadsheet.worksheet(sheet_name)
     except gspread.WorksheetNotFound:
         sheet = spreadsheet.add_worksheet(title=sheet_name, rows=1000, cols=20)
-        # En-têtes: Date, Heure, Série, Numéro, [Essence, Qualité si type_produit], [Source si applicable], champs dynamiques..., Copies, Opérateur
+        # En-têtes: Date, Heure, Série, Numéro, [Essence, Qualité, Épaisseur si type_produit], [Source si applicable], champs dynamiques..., Copies, Opérateur
         headers = ['Date', 'Heure', 'Série', 'Numéro']
         if poste_config.get('type_produit'):
-            headers.extend(['Essence', 'Qualité'])
+            headers.extend(['Essence', 'Qualité', 'Épaisseur'])
         if poste_config.get('source_poste'):
             headers.append('Source')
         for field in poste_config.get('champs', []):
@@ -121,6 +121,7 @@ def log_to_poste_sheet(poste_id: str, poste_config: dict, data: dict, copies: in
         if poste_config.get('type_produit'):
             row.append(data.get('essence', ''))
             row.append(data.get('qualite', ''))
+            row.append(data.get('epaisseur', ''))
         if poste_config.get('source_poste'):
             row.append(data.get('source', ''))
         for field in poste_config.get('champs', []):
@@ -338,6 +339,15 @@ DEFAULT_CONFIG = {
             ]
         },
         {
+            'id': 'epaisseurs',
+            'nom': 'Épaisseurs',
+            'colonnes': [
+                {'id': 'essence', 'nom': 'Essence', 'type': 'ref', 'ref_table': 'essences', 'ref_col': 'Code'},
+                {'id': 'ep_frais', 'nom': 'Épaisseur frais (mm)', 'type': 'number'},
+                {'id': 'ep_sec', 'nom': 'Épaisseur sec (mm)', 'type': 'number'}
+            ]
+        },
+        {
             'id': 'forets',
             'nom': 'Forêts',
             'colonnes': [
@@ -438,17 +448,22 @@ def generate_zpl(poste: dict, data: dict, source: str = '') -> str:
     
     essence = data.get('essence', '')
     qualite = data.get('qualite', '')
+    epaisseur = data.get('epaisseur', '')
     
     # Construction des lignes de champs
     champs_zpl = ""
     y_pos = 180
     
-    # Ajouter essence et qualité si présentes
+    # Ajouter essence, qualité et épaisseur si présentes
     if essence:
-        champs_zpl += f"^FO400,{y_pos}^A0N,28,28^FD{essence}"
+        ligne = essence
         if qualite:
-            champs_zpl += f" - {qualite}"
-        champs_zpl += "^FS\n"
+            ligne += f" - {qualite}"
+        if epaisseur:
+            # epaisseur format "30/27" -> "30mm"
+            ep_frais = epaisseur.split('/')[0] if '/' in epaisseur else epaisseur
+            ligne += f" - {ep_frais}mm"
+        champs_zpl += f"^FO400,{y_pos}^A0N,28,28^FD{ligne}^FS\n"
         y_pos += 35
     
     # Ajouter la source si présente
@@ -953,6 +968,17 @@ def api_get_qualites_filtrees(essence_code, produit_code):
         q for q in all_qualites
         if q.get('Essence', '').upper() == essence_code.upper()
         and q.get('Produit', '').upper() == produit_code.upper()
+    ]
+    return jsonify(filtered)
+
+
+@app.route('/api/epaisseurs/<essence_code>', methods=['GET'])
+def api_get_epaisseurs_filtrees(essence_code):
+    """Récupère les épaisseurs pour une essence donnée"""
+    all_epaisseurs = get_table_values('epaisseurs')
+    filtered = [
+        e for e in all_epaisseurs
+        if e.get('Essence', '').upper() == essence_code.upper()
     ]
     return jsonify(filtered)
 
