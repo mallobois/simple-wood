@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historique {{ poste.nom }} - MALLO BOIS</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+        }
+        header {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e7;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .back { color: #007aff; text-decoration: none; }
+        header h1 { font-size: 1.1rem; font-weight: 600; flex: 1; }
+        .refresh-btn {
+            padding: 0.5rem 1rem;
+            background: #e5e5e7;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            flex: 1;
+            background: #fff;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-value { font-size: 1.5rem; font-weight: 700; }
+        .stat-label { font-size: 0.75rem; color: #86868b; }
+        .table-wrapper {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        th {
+            background: #f5f5f7;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #86868b;
+            text-transform: uppercase;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #f9f9fb; }
+        .empty {
+            text-align: center;
+            padding: 3rem;
+            color: #86868b;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/poste/{{ poste.id }}" class="back">← {{ poste.nom }}</a>
+        <h1>Historique</h1>
+        <button class="refresh-btn" onclick="loadHistory()">🔄 Actualiser</button>
+    </header>
+
+    <main>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total">{{ history | length }}</div>
+                <div class="stat-label">Impressions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-today">0</div>
+                <div class="stat-label">Aujourd'hui</div>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Heure</th>
+                        <th>Numéro</th>
+                        {% for champ in poste.champs %}
+                        <th>{{ champ.nom }}</th>
+                        {% endfor %}
+                        <th>Copies</th>
+                        <th>Opérateur</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    {% if history %}
+                    {% for row in history %}
+                    <tr>
+                        <td>{{ row.Date }}</td>
+                        <td>{{ row.Heure }}</td>
+                        <td>{{ row['Numéro'] }}</td>
+                        {% for champ in poste.champs %}
+                        <td>{{ row.get(champ.nom, '') }}</td>
+                        {% endfor %}
+                        <td>{{ row.Copies }}</td>
+                        <td>{{ row['Opérateur'] }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr><td colspan="10" class="empty">Aucun historique</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const posteId = '{{ poste.id }}';
+        const today = new Date().toLocaleDateString('fr-FR');
+
+        function countToday() {
+            const rows = document.querySelectorAll('#history-body tr');
+            let count = 0;
+            rows.forEach(row => {
+                const dateCell = row.querySelector('td');
+                if (dateCell && dateCell.textContent === today) count++;
+            });
+            document.getElementById('stat-today').textContent = count;
+        }
+
+        async function loadHistory() {
+            const res = await fetch('/api/poste/' + posteId + '/history');
+            const data = await res.json();
+            document.getElementById('stat-total').textContent = data.length;
+            // Refresh page for simplicity
+            location.reload();
+        }
+
+        countToday();
+    </script>
+</body>
+</html>

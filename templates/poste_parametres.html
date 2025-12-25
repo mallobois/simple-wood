@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paramètres {{ poste.nom }} - MALLO BOIS</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+        }
+        header {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e7;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .back { color: #007aff; text-decoration: none; }
+        header h1 { font-size: 1.1rem; font-weight: 600; }
+        main {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+        .section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .section h2 {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #86868b;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            background: #007aff;
+            color: #fff;
+        }
+        .btn:hover { background: #0066d6; }
+        .btn.secondary { background: #e5e5e7; color: #1d1d1f; }
+        .btn.danger { background: #ff3b30; }
+        /* Champs dynamiques */
+        .champs-list { margin-bottom: 1rem; }
+        .champ-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: #f5f5f7;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .champ-item input { flex: 1; }
+        .champ-item select { width: 100px; }
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #e5e5e7;
+        }
+        .btn-icon:hover { background: #d2d2d7; }
+        .btn-icon.delete:hover { background: #ff3b30; color: #fff; }
+        .message {
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .message.show { display: block; }
+        .message.success { background: #d4edda; color: #155724; }
+        .message.error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/poste/{{ poste.id }}" class="back">← {{ poste.nom }}</a>
+        <h1>Paramètres</h1>
+    </header>
+
+    <main>
+        <div id="message" class="message"></div>
+
+        <div class="section">
+            <h2>Général</h2>
+            <div class="form-group">
+                <label>Nom du poste</label>
+                <input type="text" id="nom" value="{{ poste.nom }}">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="description" value="{{ poste.description or '' }}">
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Numérotation</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Série</label>
+                    <input type="text" id="serie" value="{{ poste.serie }}">
+                </div>
+                <div class="form-group">
+                    <label>Préfixe</label>
+                    <input type="text" id="prefixe" value="{{ poste.prefixe or '' }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Compteur actuel</label>
+                    <input type="number" id="compteur" value="{{ poste.compteur }}" min="0" max="999999">
+                </div>
+                <div class="form-group">
+                    <label>Copies par défaut</label>
+                    <input type="number" id="copies_defaut" value="{{ poste.copies_defaut or 1 }}" min="1" max="50">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Imprimante</h2>
+            <div class="form-group">
+                <select id="printer">
+                    {% for p in printers %}
+                    <option value="{{ p.id }}" {% if p.id == poste.printer %}selected{% endif %}>{{ p.nom }} ({{ p.ip }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Champs personnalisés</h2>
+            <div class="champs-list" id="champs-list"></div>
+            <button class="btn secondary" onclick="addChamp()">+ Ajouter un champ</button>
+        </div>
+
+        <button class="btn" onclick="save()" style="width:100%; margin-top:1rem;">Enregistrer</button>
+    </main>
+
+    <script>
+        const posteId = '{{ poste.id }}';
+        let champs = {{ poste.champs | tojson }};
+
+        function renderChamps() {
+            const list = document.getElementById('champs-list');
+            list.innerHTML = champs.map((c, i) => `
+                <div class="champ-item">
+                    <input type="text" value="${c.id}" placeholder="ID" onchange="updateChamp(${i}, 'id', this.value)" style="width:80px">
+                    <input type="text" value="${c.nom}" placeholder="Nom" onchange="updateChamp(${i}, 'nom', this.value)">
+                    <select onchange="updateChamp(${i}, 'type', this.value)">
+                        <option value="text" ${c.type === 'text' ? 'selected' : ''}>Texte</option>
+                        <option value="number" ${c.type === 'number' ? 'selected' : ''}>Nombre</option>
+                        <option value="select" ${c.type === 'select' ? 'selected' : ''}>Liste</option>
+                    </select>
+                    <button class="btn-icon delete" onclick="removeChamp(${i})">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        function addChamp() {
+            const id = 'champ' + (champs.length + 1);
+            champs.push({ id, nom: 'Nouveau champ', type: 'text' });
+            renderChamps();
+        }
+
+        function updateChamp(i, key, value) {
+            champs[i][key] = value;
+        }
+
+        function removeChamp(i) {
+            champs.splice(i, 1);
+            renderChamps();
+        }
+
+        async function save() {
+            const data = {
+                nom: document.getElementById('nom').value,
+                description: document.getElementById('description').value,
+                serie: document.getElementById('serie').value,
+                prefixe: document.getElementById('prefixe').value,
+                compteur: parseInt(document.getElementById('compteur').value),
+                copies_defaut: parseInt(document.getElementById('copies_defaut').value),
+                printer: document.getElementById('printer').value,
+                champs: champs
+            };
+
+            const res = await fetch('/api/postes/' + posteId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+
+            const msg = document.getElementById('message');
+            msg.textContent = result.success ? 'Enregistré' : result.message;
+            msg.className = 'message show ' + (result.success ? 'success' : 'error');
+            setTimeout(() => msg.classList.remove('show'), 3000);
+        }
+
+        renderChamps();
+    </script>
+</body>
+</html>

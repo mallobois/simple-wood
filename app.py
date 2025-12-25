@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Serveur d'impression Zebra ZPL pour Raspberry Pi
-MALLO BOIS - Système d'étiquetage industriel v2
+MALLO BOIS - Système d'étiquetage industriel v3
+Architecture: Postes de travail dynamiques
 """
 
 import os
@@ -12,7 +13,6 @@ from pathlib import Path
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 
-# Google Sheets
 import gspread
 from google.oauth2.service_account import Credentials
 
@@ -28,6 +28,8 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 gs_client = None
 spreadsheet = None
 
+
+# ============== DECORATEURS ==============
 
 def login_required(f):
     @wraps(f)
@@ -49,6 +51,8 @@ def admin_required(f):
     return decorated_function
 
 
+# ============== GOOGLE SHEETS ==============
+
 def init_google_sheets():
     global gs_client, spreadsheet
     try:
@@ -59,59 +63,83 @@ def init_google_sheets():
             print("✓ Google Sheets connecté")
             init_sheet_headers()
         else:
-            print("⚠ credentials.json non trouvé - Google Sheets désactivé")
+            print("⚠ credentials.json non trouvé")
     except Exception as e:
         print(f"⚠ Erreur Google Sheets: {e}")
 
 
 def init_sheet_headers():
-    headers = {
-        'Tronçons': ['Date', 'Heure', 'Série', 'Numéro', 'Code complet', 'Copies', 'Opérateur'],
-        'Paquets': ['Date', 'Heure', 'Série', 'Numéro', 'Essence', 'Qualité', 'Épaisseur', 'Largeur', 'Longueur', 'Volume', 'Copies', 'Opérateur'],
-        'Colis': ['Date', 'Heure', 'Série', 'Numéro', 'Client', 'Référence', 'Destination', 'Poids', 'Volume', 'Nb paquets', 'Copies', 'Opérateur'],
-        'Utilisateurs': ['Identifiant', 'Mot de passe', 'Nom', 'Initiales', 'Droits']
-    }
-    
-    for sheet_name, header_row in headers.items():
-        try:
-            sheet = spreadsheet.worksheet(sheet_name)
-            first_row = sheet.row_values(1)
-            if not first_row:
-                sheet.append_row(header_row)
-            
-            if sheet_name == 'Utilisateurs':
-                all_values = sheet.get_all_values()
-                if len(all_values) <= 1:
-                    print("→ Ajout des utilisateurs par défaut...")
-                    sheet.append_row(['admin', '123456', 'Administrateur', 'AD', 'admin'])
-                    sheet.append_row(['operateur', '111111', 'Opérateur', 'OP', 'operateur'])
-                    print("✓ Utilisateurs ajoutés")
-                else:
-                    print(f"✓ {len(all_values)-1} utilisateur(s) trouvé(s)")
-                    
-        except gspread.WorksheetNotFound:
-            print(f"→ Création onglet {sheet_name}...")
-            sheet = spreadsheet.add_worksheet(title=sheet_name, rows=1000, cols=20)
-            sheet.append_row(header_row)
-            if sheet_name == 'Utilisateurs':
-                sheet.append_row(['admin', '123456', 'Administrateur', 'AD', 'admin'])
-                sheet.append_row(['operateur', '111111', 'Opérateur', 'OP', 'operateur'])
+    """Initialise l'onglet Utilisateurs"""
+    try:
+        sheet = spreadsheet.worksheet('Utilisateurs')
+        all_values = sheet.get_all_values()
+        if len(all_values) <= 1:
+            print("→ Ajout utilisateurs par défaut...")
+            sheet.append_row(['admin', '123456', 'Administrateur', 'AD', 'admin', ''])
+            sheet.append_row(['operateur', '111111', 'Opérateur', 'OP', 'operateur', ''])
+    except gspread.WorksheetNotFound:
+        print("→ Création onglet Utilisateurs...")
+        sheet = spreadsheet.add_worksheet(title='Utilisateurs', rows=100, cols=10)
+        sheet.append_row(['Identifiant', 'Mot de passe', 'Nom', 'Initiales', 'Droits', 'Postes'])
+        sheet.append_row(['admin', '123456', 'Administrateur', 'AD', 'admin', ''])
+        sheet.append_row(['operateur', '111111', 'Opérateur', 'OP', 'operateur', ''])
 
 
-def log_to_sheets(sheet_name: str, data: list):
+def get_or_create_poste_sheet(poste_id: str, poste_config: dict):
+    """Crée ou récupère l'onglet Google Sheets pour un poste"""
+    sheet_name = f"Poste_{poste_id}"
+    try:
+        return spreadsheet.worksheet(sheet_name)
+    except gspread.WorksheetNotFound:
+        sheet = spreadsheet.add_worksheet(title=sheet_name, rows=1000, cols=20)
+        # En-têtes: Date, Heure, Numéro, champs dynamiques..., Copies, Opérateur
+        headers = ['Date', 'Heure', 'Série', 'Numéro']
+        for field in poste_config.get('champs', []):
+            headers.append(field['nom'])
+        headers.extend(['Copies', 'Opérateur'])
+        sheet.append_row(headers)
+        return sheet
+
+
+def log_to_poste_sheet(poste_id: str, poste_config: dict, data: dict, copies: int, operateur: str):
+    """Enregistre une impression dans le Google Sheet du poste"""
     if spreadsheet is None:
         return
     try:
-        sheet = spreadsheet.worksheet(sheet_name)
-        sheet.append_row(data)
+        sheet = get_or_create_poste_sheet(poste_id, poste_config)
+        now = datetime.now()
+        row = [
+            now.strftime('%d/%m/%Y'),
+            now.strftime('%H:%M:%S'),
+            poste_config.get('serie', '2501'),
+            data.get('numero', '')
+        ]
+        for field in poste_config.get('champs', []):
+            row.append(data.get(field['id'], ''))
+        row.extend([copies, operateur])
+        sheet.append_row(row)
     except Exception as e:
-        print(f"Erreur log Google Sheets: {e}")
+        print(f"Erreur log: {e}")
 
+
+def get_poste_history(poste_id: str, limit: int = 50) -> list:
+    """Récupère l'historique d'un poste"""
+    if spreadsheet is None:
+        return []
+    try:
+        sheet_name = f"Poste_{poste_id}"
+        sheet = spreadsheet.worksheet(sheet_name)
+        records = sheet.get_all_records()
+        return list(reversed(records[-limit:]))
+    except:
+        return []
+
+
+# ============== UTILISATEURS ==============
 
 def get_users_from_sheets() -> dict:
     default_users = {
-        'admin': {'password': '123456', 'nom': 'Administrateur', 'initiales': 'AD', 'droits': 'admin'},
-        'operateur': {'password': '111111', 'nom': 'Opérateur', 'initiales': 'OP', 'droits': 'operateur'},
+        'admin': {'password': '123456', 'nom': 'Administrateur', 'initiales': 'AD', 'droits': 'admin', 'postes': []},
     }
     
     if spreadsheet is None:
@@ -128,25 +156,40 @@ def get_users_from_sheets() -> dict:
             identifiant = row.get('Identifiant', '')
             if identifiant:
                 nom = row.get('Nom', identifiant)
+                postes_str = str(row.get('Postes', ''))
+                postes = [p.strip() for p in postes_str.split(',') if p.strip()]
                 users[identifiant] = {
                     'password': str(row.get('Mot de passe', '')),
                     'nom': nom,
                     'initiales': row.get('Initiales', nom[:2].upper()),
-                    'droits': row.get('Droits', 'operateur')
+                    'droits': row.get('Droits', 'operateur'),
+                    'postes': postes
                 }
         return users if users else default_users
     except Exception as e:
-        print(f"Erreur lecture utilisateurs: {e}")
+        print(f"Erreur utilisateurs: {e}")
         return default_users
 
+
+# ============== CONFIGURATION ==============
 
 DEFAULT_CONFIG = {
     'printers': [
         {'id': 'zebra1', 'nom': 'Zebra 1', 'ip': '192.168.1.67', 'port': 9100}
     ],
-    'troncons': {'serie': '2601', 'compteur': 0, 'prefixe': 'TRO-', 'copies_defaut': 1, 'printer': 'zebra1'},
-    'paquet': {'serie': '2601', 'compteur': 0, 'copies_defaut': 1, 'printer': 'zebra1'},
-    'colis': {'serie': '2601', 'compteur': 0, 'copies_defaut': 1, 'printer': 'zebra1'},
+    'postes': [
+        {
+            'id': 'troncons',
+            'nom': 'Tronçons',
+            'description': 'Étiquetage des tronçons de bois',
+            'serie': '2501',
+            'compteur': 0,
+            'prefixe': 'TRO-',
+            'printer': 'zebra1',
+            'copies_defaut': 1,
+            'champs': []
+        }
+    ],
     'utilisateur': {'nom': 'Opérateur', 'site': 'MALLO BOIS'}
 }
 
@@ -156,20 +199,13 @@ def load_config() -> dict:
         try:
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
                 config = json.load(f)
-                for key, value in DEFAULT_CONFIG.items():
-                    if key not in config:
-                        config[key] = value
-                    elif isinstance(value, dict):
-                        for subkey, subvalue in value.items():
-                            if subkey not in config[key]:
-                                config[key][subkey] = subvalue
-                # Migration: ancien format printer -> printers
-                if 'printer' in config and 'printers' not in config:
-                    config['printers'] = [{'id': 'zebra1', 'nom': 'Zebra 1', 'ip': config['printer']['ip'], 'port': config['printer']['port']}]
-                    del config['printer']
+                if 'printers' not in config:
+                    config['printers'] = DEFAULT_CONFIG['printers']
+                if 'postes' not in config:
+                    config['postes'] = DEFAULT_CONFIG['postes']
                 return config
         except Exception as e:
-            print(f"Erreur lecture config: {e}")
+            print(f"Erreur config: {e}")
     return DEFAULT_CONFIG.copy()
 
 
@@ -178,11 +214,17 @@ def save_config(config: dict):
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=2, ensure_ascii=False)
     except Exception as e:
-        print(f"Erreur sauvegarde config: {e}")
+        print(f"Erreur sauvegarde: {e}")
+
+
+def get_poste(config: dict, poste_id: str) -> dict:
+    for p in config.get('postes', []):
+        if p['id'] == poste_id:
+            return p
+    return None
 
 
 def get_printer(config: dict, printer_id: str) -> dict:
-    """Récupère une imprimante par son ID"""
     for p in config.get('printers', []):
         if p.get('id') == printer_id:
             return p
@@ -191,8 +233,9 @@ def get_printer(config: dict, printer_id: str) -> dict:
     return {'ip': '192.168.1.67', 'port': 9100}
 
 
+# ============== IMPRESSION ==============
+
 def send_zpl_to_printer(zpl_code: str, printer: dict) -> dict:
-    """Envoie le code ZPL à l'imprimante via réseau TCP/IP"""
     ip = printer.get('ip', '192.168.1.67')
     port = printer.get('port', 9100)
     try:
@@ -202,11 +245,11 @@ def send_zpl_to_printer(zpl_code: str, printer: dict) -> dict:
             sock.sendall(zpl_code.encode('utf-8'))
         return {'success': True, 'message': f'Envoyé à {ip}:{port}'}
     except socket.timeout:
-        return {'success': False, 'message': 'Timeout - Imprimante non accessible'}
+        return {'success': False, 'message': 'Timeout'}
     except ConnectionRefusedError:
-        return {'success': False, 'message': 'Connexion refusée - Vérifiez IP et port'}
+        return {'success': False, 'message': 'Connexion refusée'}
     except OSError as e:
-        return {'success': False, 'message': f'Erreur réseau: {str(e)}'}
+        return {'success': False, 'message': str(e)}
 
 
 def format_numero(n: int) -> str:
@@ -218,12 +261,22 @@ def format_numero_compact(n: int) -> str:
     return f"{n:06d}"
 
 
-def generate_zpl_troncons(config: dict) -> str:
-    prefixe = config['troncons'].get('prefixe', 'TRO-')
-    serie = config['troncons']['serie']
-    compteur = config['troncons']['compteur']
+def generate_zpl(poste: dict, data: dict) -> str:
+    """Génère le code ZPL pour un poste"""
+    serie = poste.get('serie', '2501')
+    compteur = poste.get('compteur', 0)
+    prefixe = poste.get('prefixe', '')
+    numero = format_numero(compteur)
     qr_data = f"{prefixe}{serie}-{format_numero_compact(compteur)}"
-    numero_affiche = format_numero(compteur)
+    
+    # Construction des lignes de champs
+    champs_zpl = ""
+    y_pos = 180
+    for field in poste.get('champs', []):
+        value = data.get(field['id'], '')
+        if value:
+            champs_zpl += f"^FO400,{y_pos}^A0N,24,24^FD{field['nom']}: {value}^FS\n"
+            y_pos += 30
     
     zpl = f"""^XA
 ^CI28
@@ -231,100 +284,19 @@ def generate_zpl_troncons(config: dict) -> str:
 ^LL406
 ^LH0,0
 ~SD25
-^FO392,20
-^A0N,40,40
-^FB396,1,0,R
-^FD{serie}^FS
 ^FO30,28
-^BQN,2,16
+^BQN,2,12
 ^FDQA,{qr_data}^FS
-^FO392,165
-^A0N,128,128
-^FB396,1,0,R
-^FD{numero_affiche}^FS
-^FO392,360
-^A0N,32,32
-^FB396,1,0,R
-^FDMALLO BOIS^FS
+^FO400,30^A0N,36,36^FD{serie}^FS
+^FO400,80^A0N,80,80^FD{numero}^FS
+{champs_zpl}
+^FO400,360^A0N,24,24^FDMALLO BOIS^FS
+^FO30,370^A0N,18,18^FD{datetime.now().strftime('%d/%m/%Y')}^FS
 ^XZ"""
     return zpl
 
 
-def generate_zpl_paquet(data: dict, config: dict) -> str:
-    serie = config['paquet']['serie']
-    compteur = config['paquet']['compteur']
-    essence = data.get('essence', 'HETRE')
-    epaisseur = data.get('epaisseur', '')
-    largeur = data.get('largeur', '')
-    longueur = data.get('longueur', '')
-    qualite = data.get('qualite', 'A')
-    volume = data.get('volume', '')
-    numero = format_numero(compteur)
-    qr_data = f"PAQ-{serie}-{format_numero_compact(compteur)}"
-    
-    zpl = f"""^XA
-^CI28
-^PW812
-^LL406
-^LH0,0
-~SD25
-^FO30,30
-^BQN,2,6
-^FDQA,{qr_data}^FS
-^FO280,30^A0N,40,40^FD{essence}^FS
-^FO280,80^A0N,28,28^FDQualité: {qualite}^FS
-^FO280,130^A0N,24,24^FD{epaisseur} x {largeur} x {longueur} mm^FS
-^FO280,165^A0N,24,24^FDVolume: {volume} m³^FS
-^FO280,220^GB500,2,2^FS
-^FO280,250^A0N,50,50^FD{numero}^FS
-^FO30,360^A0N,18,18^FDMALLO BOIS^FS
-^FO650,360^A0N,18,18^FD{datetime.now().strftime('%d/%m/%Y')}^FS
-^XZ"""
-    return zpl
-
-
-def generate_zpl_colis(data: dict, config: dict) -> str:
-    serie = config['colis']['serie']
-    compteur = config['colis']['compteur']
-    client = data.get('client', '')
-    reference = data.get('reference', '')
-    destination = data.get('destination', '')
-    poids = data.get('poids', '')
-    volume = data.get('volume', '')
-    nb_paquets = data.get('nb_paquets', '')
-    numero = format_numero(compteur)
-    qr_data = f"COL-{serie}-{format_numero_compact(compteur)}"
-    
-    zpl = f"""^XA
-^CI28
-^PW812
-^LL1218
-^LH0,0
-~SD25
-^FO30,30^A0N,50,50^FDMALLO BOIS SAS^FS
-^FO30,90^A0N,24,24^FDRéguisheim - France^FS
-^FO30,140^GB750,3,3^FS
-^FO30,170^A0N,45,45^FD{client}^FS
-^FO30,230^A0N,28,28^FDRéf: {reference}^FS
-^FO30,290^A0N,28,28^FDDestination:^FS
-^FO30,330^A0N,35,35^FD{destination}^FS
-^FO30,400^GB750,2,2^FS
-^FO30,430^A0N,28,28^FDPoids: {poids} kg^FS
-^FO300,430^A0N,28,28^FDVolume: {volume} m³^FS
-^FO550,430^A0N,28,28^FDPaquets: {nb_paquets}^FS
-^FO30,500^GB750,2,2^FS
-^FO50,550
-^BQN,2,10
-^FDQA,{qr_data}^FS
-^FO400,600^A0N,70,70^FD{numero}^FS
-^FO400,700^A0N,28,28^FDColis N°^FS
-^FO30,900^GB750,2,2^FS
-^FO30,930^A0N,24,24^FDDate: {datetime.now().strftime('%d/%m/%Y %H:%M')}^FS
-^XZ"""
-    return zpl
-
-
-# ============== ROUTES ==============
+# ============== ROUTES PRINCIPALES ==============
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -338,48 +310,78 @@ def login():
             session['user'] = username
             session['user_nom'] = users[username]['nom']
             session['user_droits'] = users[username].get('droits', 'operateur')
-            config = load_config()
-            config['utilisateur']['nom'] = users[username]['nom']
-            save_config(config)
+            session['user_postes'] = users[username].get('postes', [])
             return jsonify({'success': True})
-        else:
-            return jsonify({'success': False, 'message': 'Identifiants incorrects'})
+        return jsonify({'success': False, 'message': 'Identifiants incorrects'})
     
     return render_template('login.html')
 
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
-    session.pop('user_nom', None)
+    session.clear()
     return redirect(url_for('login'))
 
 
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html', user=session.get('user_nom', ''), droits=session.get('user_droits', 'operateur'))
-
-
-@app.route('/troncons')
-@login_required
-def page_troncons():
     config = load_config()
-    return render_template('troncons.html', config=config)
+    user_postes = session.get('user_postes', [])
+    is_admin = session.get('user_droits') == 'admin'
+    
+    # Admin voit tous les postes, sinon seulement ceux affectés
+    if is_admin or not user_postes:
+        postes = config.get('postes', [])
+    else:
+        postes = [p for p in config.get('postes', []) if p['id'] in user_postes]
+    
+    return render_template('index.html', 
+                           user=session.get('user_nom', ''),
+                           droits=session.get('user_droits', 'operateur'),
+                           postes=postes)
 
 
-@app.route('/paquets')
+# ============== ROUTES POSTES ==============
+
+@app.route('/poste/<poste_id>')
 @login_required
-def page_paquets():
+def page_poste(poste_id):
     config = load_config()
-    return render_template('paquets.html', config=config)
+    poste = get_poste(config, poste_id)
+    if not poste:
+        return redirect(url_for('index'))
+    
+    # Vérifier accès
+    user_postes = session.get('user_postes', [])
+    is_admin = session.get('user_droits') == 'admin'
+    if not is_admin and user_postes and poste_id not in user_postes:
+        return redirect(url_for('index'))
+    
+    printers = config.get('printers', [])
+    return render_template('poste_tache.html', poste=poste, printers=printers)
 
 
-@app.route('/colis')
-@login_required
-def page_colis():
+@app.route('/poste/<poste_id>/parametres')
+@admin_required
+def page_poste_params(poste_id):
     config = load_config()
-    return render_template('colis.html', config=config)
+    poste = get_poste(config, poste_id)
+    if not poste:
+        return redirect(url_for('index'))
+    printers = config.get('printers', [])
+    return render_template('poste_parametres.html', poste=poste, printers=printers)
+
+
+@app.route('/poste/<poste_id>/liste')
+@admin_required
+def page_poste_liste(poste_id):
+    config = load_config()
+    poste = get_poste(config, poste_id)
+    if not poste:
+        return redirect(url_for('index'))
+    history = get_poste_history(poste_id)
+    return render_template('poste_liste.html', poste=poste, history=history)
 
 
 @app.route('/parametres')
@@ -394,28 +396,23 @@ def page_parametres():
 @app.route('/api/users', methods=['GET'])
 def api_get_users():
     users = get_users_from_sheets()
-    result = []
-    for uid, data in users.items():
-        result.append({
-            'id': uid,
-            'nom': data.get('nom', uid),
-            'initiales': data.get('initiales', uid[:2].upper())
-        })
-    return jsonify(result)
+    return jsonify([{
+        'id': uid,
+        'nom': data.get('nom', uid),
+        'initiales': data.get('initiales', uid[:2].upper())
+    } for uid, data in users.items()])
 
 
 @app.route('/api/users/full', methods=['GET'])
 def api_get_users_full():
     users = get_users_from_sheets()
-    result = []
-    for uid, data in users.items():
-        result.append({
-            'id': uid,
-            'nom': data.get('nom', uid),
-            'initiales': data.get('initiales', uid[:2].upper()),
-            'droits': data.get('droits', 'operateur')
-        })
-    return jsonify(result)
+    return jsonify([{
+        'id': uid,
+        'nom': data.get('nom', uid),
+        'initiales': data.get('initiales', uid[:2].upper()),
+        'droits': data.get('droits', 'operateur'),
+        'postes': data.get('postes', [])
+    } for uid, data in users.items()])
 
 
 @app.route('/api/users', methods=['POST'])
@@ -429,6 +426,7 @@ def api_create_user():
     initiales = data.get('initiales', '').strip().upper()
     droits = data.get('droits', 'operateur')
     password = data.get('password', '')
+    postes = data.get('postes', [])
     
     if not uid or not nom or not initiales or not password:
         return jsonify({'success': False, 'message': 'Champs manquants'})
@@ -442,7 +440,8 @@ def api_create_user():
     
     try:
         sheet = spreadsheet.worksheet('Utilisateurs')
-        sheet.append_row([uid, password, nom, initiales, droits])
+        postes_str = ','.join(postes) if postes else ''
+        sheet.append_row([uid, password, nom, initiales, droits, postes_str])
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -459,6 +458,7 @@ def api_update_user():
     initiales = data.get('initiales', '').strip().upper()
     droits = data.get('droits', 'operateur')
     password = data.get('password', '')
+    postes = data.get('postes', [])
     
     if not uid or not nom or not initiales:
         return jsonify({'success': False, 'message': 'Champs manquants'})
@@ -476,6 +476,7 @@ def api_update_user():
                 sheet.update_cell(row_num, 3, nom)
                 sheet.update_cell(row_num, 4, initiales)
                 sheet.update_cell(row_num, 5, droits)
+                sheet.update_cell(row_num, 6, ','.join(postes))
                 if password:
                     sheet.update_cell(row_num, 2, password)
                 return jsonify({'success': True})
@@ -496,8 +497,7 @@ def api_delete_user(uid):
         
         for i, row in enumerate(records):
             if row.get('Identifiant') == uid:
-                row_num = i + 2
-                sheet.delete_rows(row_num)
+                sheet.delete_rows(i + 2)
                 return jsonify({'success': True})
         
         return jsonify({'success': False, 'message': 'Utilisateur non trouvé'})
@@ -516,27 +516,23 @@ def api_get_printers():
 @app.route('/api/printers', methods=['POST'])
 def api_create_printer():
     config = load_config()
-    data = request.json
     
     if len(config.get('printers', [])) >= 6:
         return jsonify({'success': False, 'message': 'Maximum 6 imprimantes'})
     
+    data = request.json
     pid = data.get('id', '').strip().lower()
-    nom = data.get('nom', '').strip()
-    ip = data.get('ip', '').strip()
-    port = int(data.get('port', 9100))
-    
-    if not pid or not nom or not ip:
-        return jsonify({'success': False, 'message': 'Champs manquants'})
     
     for p in config.get('printers', []):
         if p['id'] == pid:
             return jsonify({'success': False, 'message': 'ID déjà utilisé'})
     
-    if 'printers' not in config:
-        config['printers'] = []
-    
-    config['printers'].append({'id': pid, 'nom': nom, 'ip': ip, 'port': port})
+    config['printers'].append({
+        'id': pid,
+        'nom': data.get('nom', '').strip(),
+        'ip': data.get('ip', '').strip(),
+        'port': int(data.get('port', 9100))
+    })
     save_config(config)
     return jsonify({'success': True})
 
@@ -545,20 +541,13 @@ def api_create_printer():
 def api_update_printer():
     config = load_config()
     data = request.json
-    
-    pid = data.get('id', '').strip().lower()
-    nom = data.get('nom', '').strip()
-    ip = data.get('ip', '').strip()
-    port = int(data.get('port', 9100))
-    
-    if not pid or not nom or not ip:
-        return jsonify({'success': False, 'message': 'Champs manquants'})
+    pid = data.get('id')
     
     for p in config.get('printers', []):
         if p['id'] == pid:
-            p['nom'] = nom
-            p['ip'] = ip
-            p['port'] = port
+            p['nom'] = data.get('nom', p['nom'])
+            p['ip'] = data.get('ip', p['ip'])
+            p['port'] = int(data.get('port', p['port']))
             save_config(config)
             return jsonify({'success': True})
     
@@ -572,7 +561,7 @@ def api_delete_printer(pid):
     if len(config.get('printers', [])) <= 1:
         return jsonify({'success': False, 'message': 'Au moins une imprimante requise'})
     
-    config['printers'] = [p for p in config.get('printers', []) if p['id'] != pid]
+    config['printers'] = [p for p in config['printers'] if p['id'] != pid]
     save_config(config)
     return jsonify({'success': True})
 
@@ -591,233 +580,164 @@ def api_test_printer(pid):
 ^FO50,120^A0N,20,20^FD{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}^FS
 ^XZ"""
     
-    result = send_zpl_to_printer(test_zpl, printer)
-    return jsonify(result)
+    return jsonify(send_zpl_to_printer(test_zpl, printer))
 
 
-# ============== API CONFIG ==============
+# ============== API POSTES ==============
 
-@app.route('/api/config', methods=['GET'])
-def api_get_config():
+@app.route('/api/postes', methods=['GET'])
+def api_get_postes():
     config = load_config()
-    return jsonify(config)
+    return jsonify(config.get('postes', []))
 
 
-@app.route('/api/config', methods=['POST'])
-def api_save_config():
+@app.route('/api/postes', methods=['POST'])
+def api_create_poste():
+    config = load_config()
     data = request.json
+    
+    pid = data.get('id', '').strip().lower().replace(' ', '_')
+    if not pid:
+        return jsonify({'success': False, 'message': 'ID requis'})
+    
+    for p in config.get('postes', []):
+        if p['id'] == pid:
+            return jsonify({'success': False, 'message': 'ID déjà utilisé'})
+    
+    config['postes'].append({
+        'id': pid,
+        'nom': data.get('nom', pid),
+        'description': data.get('description', ''),
+        'serie': data.get('serie', '2501'),
+        'compteur': 0,
+        'prefixe': data.get('prefixe', ''),
+        'printer': data.get('printer', config['printers'][0]['id'] if config['printers'] else 'zebra1'),
+        'copies_defaut': int(data.get('copies_defaut', 1)),
+        'champs': data.get('champs', [])
+    })
+    save_config(config)
+    return jsonify({'success': True})
+
+
+@app.route('/api/postes/<poste_id>', methods=['PUT'])
+def api_update_poste(poste_id):
+    config = load_config()
+    data = request.json
+    
+    for p in config.get('postes', []):
+        if p['id'] == poste_id:
+            p['nom'] = data.get('nom', p['nom'])
+            p['description'] = data.get('description', p.get('description', ''))
+            p['serie'] = data.get('serie', p['serie'])
+            p['prefixe'] = data.get('prefixe', p.get('prefixe', ''))
+            p['printer'] = data.get('printer', p['printer'])
+            p['copies_defaut'] = int(data.get('copies_defaut', p.get('copies_defaut', 1)))
+            if 'compteur' in data:
+                p['compteur'] = int(data['compteur']) % 1000000
+            if 'champs' in data:
+                p['champs'] = data['champs']
+            save_config(config)
+            return jsonify({'success': True})
+    
+    return jsonify({'success': False, 'message': 'Poste non trouvé'})
+
+
+@app.route('/api/postes/<poste_id>', methods=['DELETE'])
+def api_delete_poste(poste_id):
     config = load_config()
     
-    if 'troncons' in data:
-        if 'printer' in data['troncons']:
-            config['troncons']['printer'] = data['troncons']['printer']
-        if 'serie' in data['troncons']:
-            config['troncons']['serie'] = data['troncons']['serie']
-        if 'prefixe' in data['troncons']:
-            config['troncons']['prefixe'] = data['troncons']['prefixe']
-        if 'compteur' in data['troncons']:
-            config['troncons']['compteur'] = int(data['troncons']['compteur']) % 1000000
+    if len(config.get('postes', [])) <= 1:
+        return jsonify({'success': False, 'message': 'Au moins un poste requis'})
     
-    if 'paquet' in data:
-        if 'printer' in data['paquet']:
-            config['paquet']['printer'] = data['paquet']['printer']
-        if 'serie' in data['paquet']:
-            config['paquet']['serie'] = data['paquet']['serie']
-        if 'compteur' in data['paquet']:
-            config['paquet']['compteur'] = int(data['paquet']['compteur']) % 1000000
-    
-    if 'colis' in data:
-        if 'printer' in data['colis']:
-            config['colis']['printer'] = data['colis']['printer']
-        if 'serie' in data['colis']:
-            config['colis']['serie'] = data['colis']['serie']
-        if 'compteur' in data['colis']:
-            config['colis']['compteur'] = int(data['colis']['compteur']) % 1000000
-    
+    config['postes'] = [p for p in config['postes'] if p['id'] != poste_id]
     save_config(config)
-    return jsonify({'success': True, 'config': config})
+    return jsonify({'success': True})
 
 
 # ============== API IMPRESSION ==============
 
-@app.route('/api/print/troncons', methods=['POST'])
-def api_print_troncons():
+@app.route('/api/print/<poste_id>', methods=['POST'])
+def api_print(poste_id):
     config = load_config()
-    data = request.json or {}
+    poste = get_poste(config, poste_id)
     
+    if not poste:
+        return jsonify({'success': False, 'message': 'Poste non trouvé'})
+    
+    data = request.json or {}
     imprimer = data.get('imprimer', True)
-    copies = int(data.get('copies', 1)) if imprimer else 0
+    copies = int(data.get('copies', poste.get('copies_defaut', 1)))
     copies = min(max(copies, 0), 50)
     
-    zpl = generate_zpl_troncons(config)
-    numero_imprime = format_numero(config['troncons']['compteur'])
-    printer = get_printer(config, config['troncons'].get('printer', 'zebra1'))
+    numero_imprime = format_numero(poste['compteur'])
+    zpl = generate_zpl(poste, data)
+    printer = get_printer(config, poste.get('printer', 'zebra1'))
     
     printed = 0
     if imprimer and copies > 0:
-        results = []
-        for i in range(copies):
+        for _ in range(copies):
             result = send_zpl_to_printer(zpl, printer)
-            results.append(result)
-            if not result['success']:
+            if result['success']:
+                printed += 1
+            else:
                 break
-        printed = len([r for r in results if r['success']])
         
         if printed == 0:
             return jsonify({
                 'success': False,
-                'message': results[-1]['message'] if results else 'Erreur impression',
-                'compteur': config['troncons']['compteur']
+                'message': result.get('message', 'Erreur impression'),
+                'compteur': poste['compteur']
             })
     
-    now = datetime.now()
-    log_to_sheets('Tronçons', [
-        now.strftime('%d/%m/%Y'),
-        now.strftime('%H:%M:%S'),
-        config['troncons']['serie'],
-        format_numero_compact(config['troncons']['compteur']),
-        f"{config['troncons']['prefixe']}{config['troncons']['serie']}-{format_numero_compact(config['troncons']['compteur'])}",
-        copies if imprimer else 0,
-        config['utilisateur']['nom']
-    ])
+    # Log et incrément
+    log_data = data.copy()
+    log_data['numero'] = format_numero_compact(poste['compteur'])
+    log_to_poste_sheet(poste_id, poste, log_data, copies if imprimer else 0, session.get('user_nom', 'Inconnu'))
     
-    config['troncons']['compteur'] = (config['troncons']['compteur'] + 1) % 1000000
+    # Incrémenter compteur
+    for p in config['postes']:
+        if p['id'] == poste_id:
+            p['compteur'] = (p['compteur'] + 1) % 1000000
+            break
     save_config(config)
     
     return jsonify({
         'success': True,
-        'message': f'Validé et imprimé - N° {numero_imprime}' if imprimer else f'Validé - N° {numero_imprime}',
-        'compteur': config['troncons']['compteur'],
+        'message': f'Imprimé - N° {numero_imprime}' if imprimer else f'Validé - N° {numero_imprime}',
+        'compteur': poste['compteur'] + 1,
         'numero_imprime': numero_imprime
     })
 
 
-@app.route('/api/print/paquet', methods=['POST'])
-def api_print_paquet():
-    config = load_config()
-    data = request.json or {}
-    
-    copies = int(data.get('copies', config['paquet']['copies_defaut']))
-    copies = min(max(copies, 1), 50)
-    
-    zpl = generate_zpl_paquet(data, config)
-    numero_imprime = format_numero(config['paquet']['compteur'])
-    printer = get_printer(config, config['paquet'].get('printer', 'zebra1'))
-    
-    results = []
-    for i in range(copies):
-        result = send_zpl_to_printer(zpl, printer)
-        results.append(result)
-        if not result['success']:
-            break
-    
-    success = all(r['success'] for r in results)
-    printed = len([r for r in results if r['success']])
-    
-    if printed > 0:
-        now = datetime.now()
-        log_to_sheets('Paquets', [
-            now.strftime('%d/%m/%Y'),
-            now.strftime('%H:%M:%S'),
-            config['paquet']['serie'],
-            format_numero_compact(config['paquet']['compteur']),
-            data.get('essence', ''),
-            data.get('qualite', ''),
-            data.get('epaisseur', ''),
-            data.get('largeur', ''),
-            data.get('longueur', ''),
-            data.get('volume', ''),
-            copies,
-            config['utilisateur']['nom']
-        ])
-        
-        config['paquet']['compteur'] = (config['paquet']['compteur'] + 1) % 1000000
-        save_config(config)
-    
-    return jsonify({
-        'success': success,
-        'message': f'{printed}/{copies} copie(s) imprimée(s) - N° {numero_imprime}',
-        'compteur': config['paquet']['compteur'],
-        'numero_imprime': numero_imprime
-    })
+@app.route('/api/poste/<poste_id>/history', methods=['GET'])
+def api_poste_history(poste_id):
+    history = get_poste_history(poste_id)
+    return jsonify(history)
 
 
-@app.route('/api/print/colis', methods=['POST'])
-def api_print_colis():
-    config = load_config()
-    data = request.json or {}
-    
-    copies = int(data.get('copies', config['colis']['copies_defaut']))
-    copies = min(max(copies, 1), 50)
-    
-    zpl = generate_zpl_colis(data, config)
-    numero_imprime = format_numero(config['colis']['compteur'])
-    printer = get_printer(config, config['colis'].get('printer', 'zebra1'))
-    
-    results = []
-    for i in range(copies):
-        result = send_zpl_to_printer(zpl, printer)
-        results.append(result)
-        if not result['success']:
-            break
-    
-    success = all(r['success'] for r in results)
-    printed = len([r for r in results if r['success']])
-    
-    if printed > 0:
-        now = datetime.now()
-        log_to_sheets('Colis', [
-            now.strftime('%d/%m/%Y'),
-            now.strftime('%H:%M:%S'),
-            config['colis']['serie'],
-            format_numero_compact(config['colis']['compteur']),
-            data.get('client', ''),
-            data.get('reference', ''),
-            data.get('destination', ''),
-            data.get('poids', ''),
-            data.get('volume', ''),
-            data.get('nb_paquets', ''),
-            copies,
-            config['utilisateur']['nom']
-        ])
-        
-        config['colis']['compteur'] = (config['colis']['compteur'] + 1) % 1000000
-        save_config(config)
-    
-    return jsonify({
-        'success': success,
-        'message': f'{printed}/{copies} copie(s) imprimée(s) - N° {numero_imprime}',
-        'compteur': config['colis']['compteur'],
-        'numero_imprime': numero_imprime
-    })
+# ============== API SYSTEME ==============
+
+@app.route('/api/config', methods=['GET'])
+def api_get_config():
+    return jsonify(load_config())
 
 
 @app.route('/api/update', methods=['POST'])
 def api_update():
     import subprocess
     try:
-        result = subprocess.run(
-            ['git', 'pull'],
-            cwd=Path(__file__).parent,
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
+        result = subprocess.run(['git', 'pull'], cwd=Path(__file__).parent,
+                                capture_output=True, text=True, timeout=30)
         if result.returncode == 0:
-            output = result.stdout.strip()
-            if 'Already up to date' in output:
-                return jsonify({'success': True, 'message': 'Déjà à jour'})
-            else:
-                return jsonify({'success': True, 'message': 'Mise à jour effectuée. Redémarrez le serveur.'})
-        else:
-            return jsonify({'success': False, 'message': f'Erreur: {result.stderr}'})
-    except subprocess.TimeoutExpired:
-        return jsonify({'success': False, 'message': 'Timeout - vérifiez la connexion'})
+            msg = 'Déjà à jour' if 'Already up to date' in result.stdout else 'Mise à jour OK. Redémarrez.'
+            return jsonify({'success': True, 'message': msg})
+        return jsonify({'success': False, 'message': result.stderr})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
 
-# Initialisation
+# ============== INIT ==============
+
 if not CONFIG_FILE.exists():
     save_config(DEFAULT_CONFIG)
 init_google_sheets()
