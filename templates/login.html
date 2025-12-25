@@ -23,23 +23,9 @@
             margin: 1rem 0;
         }
 
-        .logo-icon {
-            width: 56px;
-            height: 56px;
-            background: #1d1d1f;
-            border-radius: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 1.25rem;
-            color: #fff;
+        .logo img {
+            height: 60px;
             margin-bottom: 0.5rem;
-        }
-
-        .logo h1 {
-            font-size: 1.25rem;
-            font-weight: 600;
         }
 
         .logo p {
@@ -47,7 +33,6 @@
             font-size: 0.8rem;
         }
 
-        /* Sélection utilisateur */
         .users-grid {
             display: flex;
             flex-wrap: wrap;
@@ -76,17 +61,6 @@
             background: #f0f7ff;
         }
 
-        .user-btn.selected {
-            border-color: #007aff;
-            background: #007aff;
-            color: #fff;
-        }
-
-        .user-btn.selected .user-icon {
-            background: #fff;
-            color: #007aff;
-        }
-
         .user-icon {
             width: 56px;
             height: 56px;
@@ -105,13 +79,12 @@
             font-weight: 500;
         }
 
-        /* PIN */
         .pin-section {
             display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            max-width: 320px;
+            max-width: 300px;
         }
 
         .pin-section.show {
@@ -122,16 +95,17 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             padding: 0.75rem 1.25rem;
             background: #fff;
             border-radius: 12px;
+            width: 100%;
         }
 
         .selected-user .user-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
+            width: 44px;
+            height: 44px;
+            font-size: 1.1rem;
         }
 
         .selected-user .user-name {
@@ -152,8 +126,8 @@
         }
 
         .pin-dot {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background: #d2d2d7;
             transition: all 0.15s;
@@ -169,13 +143,12 @@
 
         .numpad {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            width: 100%;
+            grid-template-columns: repeat(3, 80px);
+            gap: 0.6rem;
         }
 
         .num-btn {
-            aspect-ratio: 1.2;
+            height: 60px;
             font-size: 1.75rem;
             font-weight: 400;
             background: #fff;
@@ -200,10 +173,24 @@
         .num-btn.action {
             background: transparent;
             font-size: 1.25rem;
+            color: #86868b;
         }
 
-        .num-btn.action:hover {
-            background: #f5f5f7;
+        .num-btn.ok {
+            background: #34c759;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .num-btn.ok:hover {
+            background: #2db350;
+        }
+
+        .num-btn.ok:disabled {
+            background: #d2d2d7;
+            color: #fff;
+            cursor: not-allowed;
         }
 
         .message {
@@ -231,17 +218,14 @@
 </head>
 <body>
     <div class="logo">
-        <div class="logo-icon">MB</div>
-        <h1>MALLO BOIS</h1>
+        <img src="https://www.mallobois.com/web/image/3942-71d600ce/Mallo%20logo.webp" alt="MALLO BOIS">
         <p>WoodStock by Happy*Business</p>
     </div>
 
     <div id="message" class="message"></div>
 
-    <!-- Sélection utilisateur -->
     <div id="user-select" class="users-grid"></div>
 
-    <!-- Saisie PIN -->
     <div id="pin-section" class="pin-section">
         <div class="selected-user">
             <div class="user-icon" id="selected-icon">?</div>
@@ -263,20 +247,20 @@
             <button class="num-btn" onclick="addDigit('9')">9</button>
             <button class="num-btn action" onclick="clearPin()">✕</button>
             <button class="num-btn" onclick="addDigit('0')">0</button>
-            <button class="num-btn action" onclick="backspace()">⌫</button>
+            <button class="num-btn ok" id="btn-ok" onclick="tryLogin()" disabled>OK</button>
         </div>
     </div>
 
     <footer>
-        ÉTABLISSEMENTS MALLO BOIS SAS — Réguisheim
+        Fort comme un industriel, agile comme un artisan
     </footer>
 
     <script>
         let users = [];
         let selectedUser = null;
         let pin = '';
-        const MAX_PIN = 8;
         const MIN_PIN = 6;
+        const MAX_PIN = 8;
 
         document.addEventListener('DOMContentLoaded', loadUsers);
 
@@ -326,26 +310,16 @@
             let dots = '';
             for (let i = 0; i < MAX_PIN; i++) {
                 const filled = i < pin.length ? 'filled' : '';
-                const required = i < MIN_PIN ? '' : 'style="opacity:0.5"';
-                dots += `<div class="pin-dot ${filled}" ${required}></div>`;
+                dots += `<div class="pin-dot ${filled}"></div>`;
             }
             display.innerHTML = dots;
+            
+            document.getElementById('btn-ok').disabled = pin.length < MIN_PIN;
         }
 
         function addDigit(d) {
             if (pin.length >= MAX_PIN) return;
             pin += d;
-            updatePinDisplay();
-            
-            // Auto-submit quand PIN complet (6+ chiffres)
-            if (pin.length >= MIN_PIN) {
-                // Petit délai pour voir le dernier point
-                setTimeout(() => tryLogin(), 150);
-            }
-        }
-
-        function backspace() {
-            pin = pin.slice(0, -1);
             updatePinDisplay();
         }
 
