@@ -6,14 +6,12 @@
     <title>Paramètres - MALLO BOIS</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #f5f5f7;
             color: #1d1d1f;
             min-height: 100vh;
         }
-
         header {
             background: #fff;
             border-bottom: 1px solid #e5e5e7;
@@ -22,23 +20,19 @@
             align-items: center;
             gap: 1rem;
         }
-
         .back { color: #007aff; text-decoration: none; font-size: 1rem; }
         header h1 { font-size: 1.1rem; font-weight: 600; }
-
         main {
             max-width: 600px;
             margin: 0 auto;
             padding: 1.5rem;
         }
-
         .section {
             background: #fff;
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1rem;
         }
-
         .section h2 {
             font-size: 0.75rem;
             font-weight: 500;
@@ -47,49 +41,36 @@
             letter-spacing: 0.05em;
             margin-bottom: 1rem;
         }
-
-        .user-list { list-style: none; }
-
-        .user-item {
+        .item-list { list-style: none; }
+        .item {
             display: flex;
             align-items: center;
             padding: 0.75rem 0;
             border-bottom: 1px solid #f0f0f0;
             gap: 0.75rem;
         }
-
-        .user-item:last-child { border-bottom: none; }
-
-        .user-icon {
+        .item:last-child { border-bottom: none; }
+        .item-icon {
             width: 40px;
             height: 40px;
             background: #e5e5e7;
-            border-radius: 50%;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 1.2rem;
         }
-
-        .user-info { flex: 1; }
-        .user-name { font-weight: 500; }
-        .user-id { font-size: 0.8rem; color: #86868b; }
-
-        .user-badge {
+        .item-info { flex: 1; }
+        .item-name { font-weight: 500; }
+        .item-detail { font-size: 0.8rem; color: #86868b; }
+        .item-badge {
             font-size: 0.7rem;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
             background: #e5e5e7;
         }
-
-        .user-badge.admin { background: #007aff; color: #fff; }
-
-        .user-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
+        .item-badge.admin { background: #007aff; color: #fff; }
+        .item-actions { display: flex; gap: 0.5rem; }
         .btn-icon {
             width: 32px;
             height: 32px;
@@ -99,10 +80,8 @@
             font-size: 1rem;
             background: #f5f5f7;
         }
-
         .btn-icon:hover { background: #e5e5e7; }
         .btn-icon.delete:hover { background: #ff3b30; color: #fff; }
-
         .btn {
             padding: 0.75rem 1.5rem;
             border: none;
@@ -113,19 +92,32 @@
             background: #007aff;
             color: #fff;
         }
-
         .btn:hover { background: #0066d6; }
         .btn.secondary { background: #e5e5e7; color: #1d1d1f; }
         .btn.secondary:hover { background: #d2d2d7; }
         .btn.danger { background: #ff3b30; }
         .btn.danger:hover { background: #d63029; }
-
-        .add-user-btn {
+        .add-btn {
             width: 100%;
             padding: 1rem;
             margin-top: 1rem;
         }
-
+        /* Affectation */
+        .assign-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .assign-row:last-child { border-bottom: none; }
+        .assign-row label { font-weight: 500; }
+        .assign-row select {
+            padding: 0.5rem;
+            border: 1px solid #e5e5e7;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
         /* Modal */
         .modal {
             display: none;
@@ -136,9 +128,7 @@
             justify-content: center;
             z-index: 100;
         }
-
         .modal.show { display: flex; }
-
         .modal-content {
             background: #fff;
             border-radius: 16px;
@@ -146,23 +136,14 @@
             width: 90%;
             max-width: 400px;
         }
-
-        .modal h3 {
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
+        .modal h3 { font-size: 1.1rem; margin-bottom: 1.5rem; }
+        .form-group { margin-bottom: 1rem; }
         .form-group label {
             display: block;
             font-size: 0.8rem;
             color: #86868b;
             margin-bottom: 0.5rem;
         }
-
         .form-group input, .form-group select {
             width: 100%;
             padding: 0.75rem;
@@ -170,20 +151,21 @@
             border-radius: 8px;
             font-size: 1rem;
         }
-
         .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #007aff;
         }
-
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
         .modal-actions {
             display: flex;
             gap: 0.75rem;
             margin-top: 1.5rem;
         }
-
         .modal-actions .btn { flex: 1; }
-
         .message {
             padding: 0.75rem 1rem;
             border-radius: 8px;
@@ -191,16 +173,9 @@
             font-size: 0.85rem;
             display: none;
         }
-
         .message.show { display: block; }
         .message.success { background: #d4edda; color: #155724; }
         .message.error { background: #f8d7da; color: #721c24; }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
     </style>
 </head>
 <body>
@@ -212,51 +187,91 @@
     <main>
         <div id="message" class="message"></div>
 
+        <!-- IMPRIMANTES -->
+        <div class="section">
+            <h2>Imprimantes Zebra (max 6)</h2>
+            <ul class="item-list" id="printer-list"></ul>
+            <button class="btn add-btn" onclick="openPrinterModal()">+ Ajouter une imprimante</button>
+        </div>
+
+        <!-- AFFECTATION -->
+        <div class="section">
+            <h2>Affectation imprimantes</h2>
+            <div class="assign-row">
+                <label>Tronçons</label>
+                <select id="assign-troncons" onchange="saveAssign()"></select>
+            </div>
+            <div class="assign-row">
+                <label>Paquets</label>
+                <select id="assign-paquets" onchange="saveAssign()"></select>
+            </div>
+            <div class="assign-row">
+                <label>Colis</label>
+                <select id="assign-colis" onchange="saveAssign()"></select>
+            </div>
+        </div>
+
+        <!-- UTILISATEURS -->
         <div class="section">
             <h2>Utilisateurs</h2>
-            <ul class="user-list" id="user-list"></ul>
-            <button class="btn add-user-btn" onclick="openModal()">+ Ajouter un utilisateur</button>
+            <ul class="item-list" id="user-list"></ul>
+            <button class="btn add-btn" onclick="openUserModal()">+ Ajouter un utilisateur</button>
         </div>
 
+        <!-- MISE A JOUR -->
         <div class="section">
-            <h2>Imprimante</h2>
-            <div class="form-group">
-                <label>Adresse IP</label>
-                <input type="text" id="printer-ip" value="{{ config.printer.ip }}">
-            </div>
-            <div class="form-group">
-                <label>Port</label>
-                <input type="number" id="printer-port" value="{{ config.printer.port }}">
-            </div>
-            <button class="btn secondary" onclick="saveConfig()">Enregistrer</button>
-            <button class="btn secondary" onclick="testPrinter()" style="margin-left: 0.5rem;">Tester</button>
-        </div>
-
-        <div class="section">
-            <h2>Mise à jour</h2>
+            <h2>Système</h2>
             <button class="btn secondary" onclick="updateApp()">Mettre à jour depuis GitHub</button>
         </div>
     </main>
 
+    <!-- Modal imprimante -->
+    <div class="modal" id="printer-modal">
+        <div class="modal-content">
+            <h3 id="printer-modal-title">Nouvelle imprimante</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ID</label>
+                    <input type="text" id="printer-id" placeholder="zebra1">
+                </div>
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" id="printer-nom" placeholder="Zebra Bureau">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Adresse IP</label>
+                    <input type="text" id="printer-ip" placeholder="192.168.1.67">
+                </div>
+                <div class="form-group">
+                    <label>Port</label>
+                    <input type="number" id="printer-port" value="9100">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn secondary" onclick="closePrinterModal()">Annuler</button>
+                <button class="btn" onclick="savePrinter()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal utilisateur -->
     <div class="modal" id="user-modal">
         <div class="modal-content">
-            <h3 id="modal-title">Nouvel utilisateur</h3>
-            
+            <h3 id="user-modal-title">Nouvel utilisateur</h3>
             <div class="form-group">
                 <label>Identifiant</label>
-                <input type="text" id="user-id" placeholder="Ex: jean">
+                <input type="text" id="user-id" placeholder="jean">
             </div>
-
             <div class="form-group">
                 <label>Nom complet</label>
-                <input type="text" id="user-nom" placeholder="Ex: Jean Dupont">
+                <input type="text" id="user-nom" placeholder="Jean Dupont">
             </div>
-
             <div class="form-row">
                 <div class="form-group">
                     <label>Initiales</label>
-                    <input type="text" id="user-initiales" placeholder="Ex: JD" maxlength="3">
+                    <input type="text" id="user-initiales" placeholder="JD" maxlength="3">
                 </div>
                 <div class="form-group">
                     <label>Droits</label>
@@ -266,23 +281,21 @@
                     </select>
                 </div>
             </div>
-
             <div class="form-group">
                 <label>Code PIN (6-8 chiffres)</label>
-                <input type="text" id="user-pin" placeholder="Ex: 123456" maxlength="8" pattern="[0-9]*" inputmode="numeric">
+                <input type="text" id="user-pin" placeholder="123456" maxlength="8" inputmode="numeric">
             </div>
-
             <div class="modal-actions">
-                <button class="btn secondary" onclick="closeModal()">Annuler</button>
-                <button class="btn" id="btn-save" onclick="saveUser()">Enregistrer</button>
+                <button class="btn secondary" onclick="closeUserModal()">Annuler</button>
+                <button class="btn" onclick="saveUser()">Enregistrer</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal confirmation suppression -->
+    <!-- Modal suppression -->
     <div class="modal" id="delete-modal">
         <div class="modal-content">
-            <h3>Supprimer l'utilisateur ?</h3>
+            <h3>Confirmer la suppression ?</h3>
             <p style="color: #86868b; margin-bottom: 1.5rem;">Cette action est irréversible.</p>
             <div class="modal-actions">
                 <button class="btn secondary" onclick="closeDeleteModal()">Annuler</button>
@@ -292,33 +305,65 @@
     </div>
 
     <script>
+        let printers = [];
         let users = [];
+        let config = {};
+        let editingPrinter = null;
         let editingUser = null;
-        let deletingUser = null;
+        let deleteType = null;
+        let deleteId = null;
 
-        document.addEventListener('DOMContentLoaded', loadUsers);
+        document.addEventListener('DOMContentLoaded', loadAll);
+
+        async function loadAll() {
+            await Promise.all([loadPrinters(), loadUsers(), loadConfig()]);
+            updateAssignSelects();
+        }
+
+        async function loadPrinters() {
+            const res = await fetch('/api/printers');
+            printers = await res.json();
+            renderPrinters();
+        }
 
         async function loadUsers() {
-            try {
-                const res = await fetch('/api/users/full');
-                users = await res.json();
-                renderUsers();
-            } catch (e) {
-                showMessage('Erreur chargement', 'error');
-            }
+            const res = await fetch('/api/users/full');
+            users = await res.json();
+            renderUsers();
+        }
+
+        async function loadConfig() {
+            const res = await fetch('/api/config');
+            config = await res.json();
+        }
+
+        function renderPrinters() {
+            document.getElementById('printer-list').innerHTML = printers.map(p => `
+                <li class="item">
+                    <div class="item-icon">🖨️</div>
+                    <div class="item-info">
+                        <div class="item-name">${p.nom}</div>
+                        <div class="item-detail">${p.ip}:${p.port}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-icon" onclick="testPrinter('${p.id}')">🔌</button>
+                        <button class="btn-icon" onclick="editPrinter('${p.id}')">✏️</button>
+                        <button class="btn-icon delete" onclick="deletePrinter('${p.id}')">🗑️</button>
+                    </div>
+                </li>
+            `).join('');
         }
 
         function renderUsers() {
-            const list = document.getElementById('user-list');
-            list.innerHTML = users.map(u => `
-                <li class="user-item">
-                    <div class="user-icon">${u.initiales}</div>
-                    <div class="user-info">
-                        <div class="user-name">${u.nom}</div>
-                        <div class="user-id">${u.id}</div>
+            document.getElementById('user-list').innerHTML = users.map(u => `
+                <li class="item">
+                    <div class="item-icon" style="border-radius:50%">${u.initiales}</div>
+                    <div class="item-info">
+                        <div class="item-name">${u.nom}</div>
+                        <div class="item-detail">${u.id}</div>
                     </div>
-                    <span class="user-badge ${u.droits}">${u.droits}</span>
-                    <div class="user-actions">
+                    <span class="item-badge ${u.droits}">${u.droits}</span>
+                    <div class="item-actions">
                         <button class="btn-icon" onclick="editUser('${u.id}')">✏️</button>
                         <button class="btn-icon delete" onclick="deleteUser('${u.id}')">🗑️</button>
                     </div>
@@ -326,22 +371,115 @@
             `).join('');
         }
 
-        function openModal(userId = null) {
-            editingUser = userId;
-            const modal = document.getElementById('user-modal');
-            const title = document.getElementById('modal-title');
+        function updateAssignSelects() {
+            const opts = printers.map(p => `<option value="${p.id}">${p.nom}</option>`).join('');
+            ['troncons', 'paquets', 'colis'].forEach(type => {
+                const sel = document.getElementById('assign-' + type);
+                sel.innerHTML = opts;
+                const configKey = type === 'paquets' ? 'paquet' : type;
+                sel.value = config[configKey]?.printer || printers[0]?.id || '';
+            });
+        }
+
+        async function saveAssign() {
+            const data = {
+                troncons: { printer: document.getElementById('assign-troncons').value },
+                paquet: { printer: document.getElementById('assign-paquets').value },
+                colis: { printer: document.getElementById('assign-colis').value }
+            };
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            showMessage('Affectation enregistrée', 'success');
+        }
+
+        // Imprimantes
+        function openPrinterModal(id = null) {
+            editingPrinter = id;
+            const title = document.getElementById('printer-modal-title');
+            const idInput = document.getElementById('printer-id');
+            
+            if (id) {
+                const p = printers.find(x => x.id === id);
+                title.textContent = 'Modifier l\'imprimante';
+                idInput.value = p.id;
+                idInput.disabled = true;
+                document.getElementById('printer-nom').value = p.nom;
+                document.getElementById('printer-ip').value = p.ip;
+                document.getElementById('printer-port').value = p.port;
+            } else {
+                title.textContent = 'Nouvelle imprimante';
+                idInput.value = '';
+                idInput.disabled = false;
+                document.getElementById('printer-nom').value = '';
+                document.getElementById('printer-ip').value = '';
+                document.getElementById('printer-port').value = '9100';
+            }
+            document.getElementById('printer-modal').classList.add('show');
+        }
+
+        function closePrinterModal() {
+            document.getElementById('printer-modal').classList.remove('show');
+            editingPrinter = null;
+        }
+
+        function editPrinter(id) { openPrinterModal(id); }
+
+        async function savePrinter() {
+            const data = {
+                id: document.getElementById('printer-id').value.trim(),
+                nom: document.getElementById('printer-nom').value.trim(),
+                ip: document.getElementById('printer-ip').value.trim(),
+                port: parseInt(document.getElementById('printer-port').value)
+            };
+            
+            const res = await fetch('/api/printers', {
+                method: editingPrinter ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                showMessage(editingPrinter ? 'Imprimante modifiée' : 'Imprimante ajoutée', 'success');
+                closePrinterModal();
+                await loadPrinters();
+                updateAssignSelects();
+            } else {
+                showMessage(result.message, 'error');
+            }
+        }
+
+        async function testPrinter(id) {
+            const res = await fetch('/api/printers/' + id + '/test', { method: 'POST' });
+            const result = await res.json();
+            showMessage(result.success ? 'Test OK' : result.message, result.success ? 'success' : 'error');
+        }
+
+        function deletePrinter(id) {
+            deleteType = 'printer';
+            deleteId = id;
+            document.getElementById('delete-modal').classList.add('show');
+        }
+
+        // Utilisateurs
+        function openUserModal(id = null) {
+            editingUser = id;
+            const title = document.getElementById('user-modal-title');
             const idInput = document.getElementById('user-id');
             
-            if (userId) {
-                const user = users.find(u => u.id === userId);
+            if (id) {
+                const u = users.find(x => x.id === id);
                 title.textContent = 'Modifier l\'utilisateur';
-                idInput.value = user.id;
+                idInput.value = u.id;
                 idInput.disabled = true;
-                document.getElementById('user-nom').value = user.nom;
-                document.getElementById('user-initiales').value = user.initiales;
-                document.getElementById('user-droits').value = user.droits;
+                document.getElementById('user-nom').value = u.nom;
+                document.getElementById('user-initiales').value = u.initiales;
+                document.getElementById('user-droits').value = u.droits;
                 document.getElementById('user-pin').value = '';
-                document.getElementById('user-pin').placeholder = 'Laisser vide pour ne pas changer';
+                document.getElementById('user-pin').placeholder = 'Laisser vide pour garder';
             } else {
                 title.textContent = 'Nouvel utilisateur';
                 idInput.value = '';
@@ -350,133 +488,79 @@
                 document.getElementById('user-initiales').value = '';
                 document.getElementById('user-droits').value = 'operateur';
                 document.getElementById('user-pin').value = '';
-                document.getElementById('user-pin').placeholder = 'Ex: 123456';
+                document.getElementById('user-pin').placeholder = '123456';
             }
-            
-            modal.classList.add('show');
+            document.getElementById('user-modal').classList.add('show');
         }
 
-        function closeModal() {
+        function closeUserModal() {
             document.getElementById('user-modal').classList.remove('show');
             editingUser = null;
         }
 
-        function editUser(userId) {
-            openModal(userId);
+        function editUser(id) { openUserModal(id); }
+
+        async function saveUser() {
+            const data = {
+                id: document.getElementById('user-id').value.trim(),
+                nom: document.getElementById('user-nom').value.trim(),
+                initiales: document.getElementById('user-initiales').value.trim(),
+                droits: document.getElementById('user-droits').value,
+                password: document.getElementById('user-pin').value.trim()
+            };
+            
+            const res = await fetch('/api/users', {
+                method: editingUser ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                showMessage(editingUser ? 'Utilisateur modifié' : 'Utilisateur créé', 'success');
+                closeUserModal();
+                loadUsers();
+            } else {
+                showMessage(result.message, 'error');
+            }
         }
 
-        function deleteUser(userId) {
-            deletingUser = userId;
+        function deleteUser(id) {
+            deleteType = 'user';
+            deleteId = id;
             document.getElementById('delete-modal').classList.add('show');
         }
 
+        // Suppression
         function closeDeleteModal() {
             document.getElementById('delete-modal').classList.remove('show');
-            deletingUser = null;
+            deleteType = null;
+            deleteId = null;
         }
 
         async function confirmDelete() {
-            if (!deletingUser) return;
+            let url = deleteType === 'printer' ? '/api/printers/' : '/api/users/';
+            const res = await fetch(url + deleteId, { method: 'DELETE' });
+            const result = await res.json();
             
-            try {
-                const res = await fetch('/api/users/' + deletingUser, {
-                    method: 'DELETE'
-                });
-                const data = await res.json();
-                
-                if (data.success) {
-                    showMessage('Utilisateur supprimé', 'success');
-                    loadUsers();
+            if (result.success) {
+                showMessage('Supprimé', 'success');
+                if (deleteType === 'printer') {
+                    await loadPrinters();
+                    updateAssignSelects();
                 } else {
-                    showMessage(data.message || 'Erreur', 'error');
+                    loadUsers();
                 }
-            } catch (e) {
-                showMessage('Erreur de communication', 'error');
+            } else {
+                showMessage(result.message, 'error');
             }
-            
             closeDeleteModal();
         }
 
-        async function saveUser() {
-            const id = document.getElementById('user-id').value.trim().toLowerCase();
-            const nom = document.getElementById('user-nom').value.trim();
-            const initiales = document.getElementById('user-initiales').value.trim().toUpperCase();
-            const droits = document.getElementById('user-droits').value;
-            const pin = document.getElementById('user-pin').value.trim();
-
-            if (!id || !nom || !initiales) {
-                showMessage('Remplissez tous les champs', 'error');
-                return;
-            }
-
-            if (!editingUser && (pin.length < 6 || pin.length > 8 || !/^\d+$/.test(pin))) {
-                showMessage('PIN: 6 à 8 chiffres', 'error');
-                return;
-            }
-
-            if (editingUser && pin && (pin.length < 6 || pin.length > 8 || !/^\d+$/.test(pin))) {
-                showMessage('PIN: 6 à 8 chiffres', 'error');
-                return;
-            }
-
-            const payload = { id, nom, initiales, droits };
-            if (pin) payload.password = pin;
-
-            try {
-                const res = await fetch('/api/users', {
-                    method: editingUser ? 'PUT' : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    showMessage(editingUser ? 'Utilisateur modifié' : 'Utilisateur créé', 'success');
-                    closeModal();
-                    loadUsers();
-                } else {
-                    showMessage(data.message || 'Erreur', 'error');
-                }
-            } catch (e) {
-                showMessage('Erreur de communication', 'error');
-            }
-        }
-
-        async function saveConfig() {
-            const ip = document.getElementById('printer-ip').value;
-            const port = document.getElementById('printer-port').value;
-
-            try {
-                const res = await fetch('/api/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ printer: { ip, port: parseInt(port) } })
-                });
-                const data = await res.json();
-                showMessage(data.success ? 'Configuration enregistrée' : 'Erreur', data.success ? 'success' : 'error');
-            } catch (e) {
-                showMessage('Erreur', 'error');
-            }
-        }
-
-        async function testPrinter() {
-            try {
-                const res = await fetch('/api/test', { method: 'POST' });
-                const data = await res.json();
-                showMessage(data.success ? 'Impression OK' : data.message, data.success ? 'success' : 'error');
-            } catch (e) {
-                showMessage('Erreur', 'error');
-            }
-        }
-
         async function updateApp() {
-            try {
-                const res = await fetch('/api/update', { method: 'POST' });
-                const data = await res.json();
-                showMessage(data.message, data.success ? 'success' : 'error');
-            } catch (e) {
-                showMessage('Erreur', 'error');
-            }
+            const res = await fetch('/api/update', { method: 'POST' });
+            const result = await res.json();
+            showMessage(result.message, result.success ? 'success' : 'error');
         }
 
         function showMessage(text, type) {

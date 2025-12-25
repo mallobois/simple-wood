@@ -79,14 +79,13 @@ def init_sheet_headers():
             if not first_row:
                 sheet.append_row(header_row)
             
-            # Pour Utilisateurs: vérifier s'il y a des données (au-delà des en-têtes)
             if sheet_name == 'Utilisateurs':
                 all_values = sheet.get_all_values()
-                if len(all_values) <= 1:  # Seulement les en-têtes ou vide
+                if len(all_values) <= 1:
                     print("→ Ajout des utilisateurs par défaut...")
-                    sheet.append_row(['admin', 'admin', 'Administrateur', 'admin'])
-                    sheet.append_row(['operateur', '1234', 'Opérateur', 'operateur'])
-                    print("✓ Utilisateurs ajoutés: admin, operateur")
+                    sheet.append_row(['admin', '123456', 'Administrateur', 'AD', 'admin'])
+                    sheet.append_row(['operateur', '111111', 'Opérateur', 'OP', 'operateur'])
+                    print("✓ Utilisateurs ajoutés")
                 else:
                     print(f"✓ {len(all_values)-1} utilisateur(s) trouvé(s)")
                     
@@ -95,9 +94,8 @@ def init_sheet_headers():
             sheet = spreadsheet.add_worksheet(title=sheet_name, rows=1000, cols=20)
             sheet.append_row(header_row)
             if sheet_name == 'Utilisateurs':
-                sheet.append_row(['admin', 'admin', 'Administrateur', 'admin'])
-                sheet.append_row(['operateur', '1234', 'Opérateur', 'operateur'])
-                print("✓ Utilisateurs ajoutés: admin, operateur")
+                sheet.append_row(['admin', '123456', 'Administrateur', 'AD', 'admin'])
+                sheet.append_row(['operateur', '111111', 'Opérateur', 'OP', 'operateur'])
 
 
 def log_to_sheets(sheet_name: str, data: list):
@@ -112,8 +110,8 @@ def log_to_sheets(sheet_name: str, data: list):
 
 def get_users_from_sheets() -> dict:
     default_users = {
-        'admin': {'password': 'admin', 'nom': 'Administrateur', 'initiales': 'AD', 'droits': 'admin'},
-        'operateur': {'password': '1234', 'nom': 'Opérateur', 'initiales': 'OP', 'droits': 'operateur'},
+        'admin': {'password': '123456', 'nom': 'Administrateur', 'initiales': 'AD', 'droits': 'admin'},
+        'operateur': {'password': '111111', 'nom': 'Opérateur', 'initiales': 'OP', 'droits': 'operateur'},
     }
     
     if spreadsheet is None:
@@ -143,10 +141,12 @@ def get_users_from_sheets() -> dict:
 
 
 DEFAULT_CONFIG = {
-    'printer': {'ip': '192.168.1.67', 'port': 9100},
-    'troncons': {'serie': '2601', 'compteur': 0, 'prefixe': 'TRO-', 'copies_defaut': 1},
-    'paquet': {'serie': '2601', 'compteur': 0, 'copies_defaut': 1},
-    'colis': {'serie': '2601', 'compteur': 0, 'copies_defaut': 1},
+    'printers': [
+        {'id': 'zebra1', 'nom': 'Zebra 1', 'ip': '192.168.1.67', 'port': 9100}
+    ],
+    'troncons': {'serie': '2601', 'compteur': 0, 'prefixe': 'TRO-', 'copies_defaut': 1, 'printer': 'zebra1'},
+    'paquet': {'serie': '2601', 'compteur': 0, 'copies_defaut': 1, 'printer': 'zebra1'},
+    'colis': {'serie': '2601', 'compteur': 0, 'copies_defaut': 1, 'printer': 'zebra1'},
     'utilisateur': {'nom': 'Opérateur', 'site': 'MALLO BOIS'}
 }
 
@@ -163,6 +163,10 @@ def load_config() -> dict:
                         for subkey, subvalue in value.items():
                             if subkey not in config[key]:
                                 config[key][subkey] = subvalue
+                # Migration: ancien format printer -> printers
+                if 'printer' in config and 'printers' not in config:
+                    config['printers'] = [{'id': 'zebra1', 'nom': 'Zebra 1', 'ip': config['printer']['ip'], 'port': config['printer']['port']}]
+                    del config['printer']
                 return config
         except Exception as e:
             print(f"Erreur lecture config: {e}")
@@ -177,9 +181,20 @@ def save_config(config: dict):
         print(f"Erreur sauvegarde config: {e}")
 
 
-def send_zpl(zpl_code: str, config: dict) -> dict:
-    ip = config['printer']['ip']
-    port = config['printer']['port']
+def get_printer(config: dict, printer_id: str) -> dict:
+    """Récupère une imprimante par son ID"""
+    for p in config.get('printers', []):
+        if p.get('id') == printer_id:
+            return p
+    if config.get('printers'):
+        return config['printers'][0]
+    return {'ip': '192.168.1.67', 'port': 9100}
+
+
+def send_zpl_to_printer(zpl_code: str, printer: dict) -> dict:
+    """Envoie le code ZPL à l'imprimante via réseau TCP/IP"""
+    ip = printer.get('ip', '192.168.1.67')
+    port = printer.get('port', 9100)
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(10)
@@ -309,6 +324,8 @@ def generate_zpl_colis(data: dict, config: dict) -> str:
     return zpl
 
 
+# ============== ROUTES ==============
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -372,9 +389,10 @@ def page_parametres():
     return render_template('parametres.html', config=config)
 
 
+# ============== API UTILISATEURS ==============
+
 @app.route('/api/users', methods=['GET'])
 def api_get_users():
-    """Retourne la liste des utilisateurs (sans mots de passe)"""
     users = get_users_from_sheets()
     result = []
     for uid, data in users.items():
@@ -388,7 +406,6 @@ def api_get_users():
 
 @app.route('/api/users/full', methods=['GET'])
 def api_get_users_full():
-    """Retourne la liste complète des utilisateurs (sans mots de passe)"""
     users = get_users_from_sheets()
     result = []
     for uid, data in users.items():
@@ -403,7 +420,6 @@ def api_get_users_full():
 
 @app.route('/api/users', methods=['POST'])
 def api_create_user():
-    """Crée un nouvel utilisateur"""
     if spreadsheet is None:
         return jsonify({'success': False, 'message': 'Google Sheets non connecté'})
     
@@ -420,7 +436,6 @@ def api_create_user():
     if len(password) < 6 or len(password) > 8 or not password.isdigit():
         return jsonify({'success': False, 'message': 'PIN: 6 à 8 chiffres'})
     
-    # Vérifier si l'utilisateur existe déjà
     users = get_users_from_sheets()
     if uid in users:
         return jsonify({'success': False, 'message': 'Identifiant déjà utilisé'})
@@ -435,7 +450,6 @@ def api_create_user():
 
 @app.route('/api/users', methods=['PUT'])
 def api_update_user():
-    """Met à jour un utilisateur"""
     if spreadsheet is None:
         return jsonify({'success': False, 'message': 'Google Sheets non connecté'})
     
@@ -458,7 +472,7 @@ def api_update_user():
         
         for i, row in enumerate(records):
             if row.get('Identifiant') == uid:
-                row_num = i + 2  # +1 pour en-tête, +1 car index commence à 1
+                row_num = i + 2
                 sheet.update_cell(row_num, 3, nom)
                 sheet.update_cell(row_num, 4, initiales)
                 sheet.update_cell(row_num, 5, droits)
@@ -473,7 +487,6 @@ def api_update_user():
 
 @app.route('/api/users/<uid>', methods=['DELETE'])
 def api_delete_user(uid):
-    """Supprime un utilisateur"""
     if spreadsheet is None:
         return jsonify({'success': False, 'message': 'Google Sheets non connecté'})
     
@@ -492,6 +505,98 @@ def api_delete_user(uid):
         return jsonify({'success': False, 'message': str(e)})
 
 
+# ============== API IMPRIMANTES ==============
+
+@app.route('/api/printers', methods=['GET'])
+def api_get_printers():
+    config = load_config()
+    return jsonify(config.get('printers', []))
+
+
+@app.route('/api/printers', methods=['POST'])
+def api_create_printer():
+    config = load_config()
+    data = request.json
+    
+    if len(config.get('printers', [])) >= 6:
+        return jsonify({'success': False, 'message': 'Maximum 6 imprimantes'})
+    
+    pid = data.get('id', '').strip().lower()
+    nom = data.get('nom', '').strip()
+    ip = data.get('ip', '').strip()
+    port = int(data.get('port', 9100))
+    
+    if not pid or not nom or not ip:
+        return jsonify({'success': False, 'message': 'Champs manquants'})
+    
+    for p in config.get('printers', []):
+        if p['id'] == pid:
+            return jsonify({'success': False, 'message': 'ID déjà utilisé'})
+    
+    if 'printers' not in config:
+        config['printers'] = []
+    
+    config['printers'].append({'id': pid, 'nom': nom, 'ip': ip, 'port': port})
+    save_config(config)
+    return jsonify({'success': True})
+
+
+@app.route('/api/printers', methods=['PUT'])
+def api_update_printer():
+    config = load_config()
+    data = request.json
+    
+    pid = data.get('id', '').strip().lower()
+    nom = data.get('nom', '').strip()
+    ip = data.get('ip', '').strip()
+    port = int(data.get('port', 9100))
+    
+    if not pid or not nom or not ip:
+        return jsonify({'success': False, 'message': 'Champs manquants'})
+    
+    for p in config.get('printers', []):
+        if p['id'] == pid:
+            p['nom'] = nom
+            p['ip'] = ip
+            p['port'] = port
+            save_config(config)
+            return jsonify({'success': True})
+    
+    return jsonify({'success': False, 'message': 'Imprimante non trouvée'})
+
+
+@app.route('/api/printers/<pid>', methods=['DELETE'])
+def api_delete_printer(pid):
+    config = load_config()
+    
+    if len(config.get('printers', [])) <= 1:
+        return jsonify({'success': False, 'message': 'Au moins une imprimante requise'})
+    
+    config['printers'] = [p for p in config.get('printers', []) if p['id'] != pid]
+    save_config(config)
+    return jsonify({'success': True})
+
+
+@app.route('/api/printers/<pid>/test', methods=['POST'])
+def api_test_printer(pid):
+    config = load_config()
+    printer = get_printer(config, pid)
+    
+    test_zpl = f"""^XA
+^CI28
+^PW812
+^LL203
+^FO50,30^A0N,40,40^FDTEST {printer.get('nom', 'Imprimante')}^FS
+^FO50,80^A0N,25,25^FDMALLO BOIS^FS
+^FO50,120^A0N,20,20^FD{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}^FS
+^XZ"""
+    
+    result = send_zpl_to_printer(test_zpl, printer)
+    return jsonify(result)
+
+
+# ============== API CONFIG ==============
+
 @app.route('/api/config', methods=['GET'])
 def api_get_config():
     config = load_config()
@@ -503,35 +608,37 @@ def api_save_config():
     data = request.json
     config = load_config()
     
-    if 'printer' in data:
-        config['printer']['ip'] = data['printer'].get('ip', config['printer']['ip'])
-        config['printer']['port'] = int(data['printer'].get('port', config['printer']['port']))
-    
     if 'troncons' in data:
-        config['troncons']['serie'] = data['troncons'].get('serie', config['troncons']['serie'])
-        config['troncons']['prefixe'] = data['troncons'].get('prefixe', config['troncons']['prefixe'])
+        if 'printer' in data['troncons']:
+            config['troncons']['printer'] = data['troncons']['printer']
+        if 'serie' in data['troncons']:
+            config['troncons']['serie'] = data['troncons']['serie']
+        if 'prefixe' in data['troncons']:
+            config['troncons']['prefixe'] = data['troncons']['prefixe']
         if 'compteur' in data['troncons']:
             config['troncons']['compteur'] = int(data['troncons']['compteur']) % 1000000
-        if 'copies_defaut' in data['troncons']:
-            config['troncons']['copies_defaut'] = max(1, min(50, int(data['troncons']['copies_defaut'])))
     
     if 'paquet' in data:
-        config['paquet']['serie'] = data['paquet'].get('serie', config['paquet']['serie'])
+        if 'printer' in data['paquet']:
+            config['paquet']['printer'] = data['paquet']['printer']
+        if 'serie' in data['paquet']:
+            config['paquet']['serie'] = data['paquet']['serie']
         if 'compteur' in data['paquet']:
             config['paquet']['compteur'] = int(data['paquet']['compteur']) % 1000000
-        if 'copies_defaut' in data['paquet']:
-            config['paquet']['copies_defaut'] = max(1, min(50, int(data['paquet']['copies_defaut'])))
     
     if 'colis' in data:
-        config['colis']['serie'] = data['colis'].get('serie', config['colis']['serie'])
+        if 'printer' in data['colis']:
+            config['colis']['printer'] = data['colis']['printer']
+        if 'serie' in data['colis']:
+            config['colis']['serie'] = data['colis']['serie']
         if 'compteur' in data['colis']:
             config['colis']['compteur'] = int(data['colis']['compteur']) % 1000000
-        if 'copies_defaut' in data['colis']:
-            config['colis']['copies_defaut'] = max(1, min(50, int(data['colis']['copies_defaut'])))
     
     save_config(config)
     return jsonify({'success': True, 'config': config})
 
+
+# ============== API IMPRESSION ==============
 
 @app.route('/api/print/troncons', methods=['POST'])
 def api_print_troncons():
@@ -544,12 +651,13 @@ def api_print_troncons():
     
     zpl = generate_zpl_troncons(config)
     numero_imprime = format_numero(config['troncons']['compteur'])
+    printer = get_printer(config, config['troncons'].get('printer', 'zebra1'))
     
     printed = 0
     if imprimer and copies > 0:
         results = []
         for i in range(copies):
-            result = send_zpl(zpl, config)
+            result = send_zpl_to_printer(zpl, printer)
             results.append(result)
             if not result['success']:
                 break
@@ -579,7 +687,6 @@ def api_print_troncons():
     return jsonify({
         'success': True,
         'message': f'Validé et imprimé - N° {numero_imprime}' if imprimer else f'Validé - N° {numero_imprime}',
-        'zpl_preview': zpl,
         'compteur': config['troncons']['compteur'],
         'numero_imprime': numero_imprime
     })
@@ -595,10 +702,11 @@ def api_print_paquet():
     
     zpl = generate_zpl_paquet(data, config)
     numero_imprime = format_numero(config['paquet']['compteur'])
+    printer = get_printer(config, config['paquet'].get('printer', 'zebra1'))
     
     results = []
     for i in range(copies):
-        result = send_zpl(zpl, config)
+        result = send_zpl_to_printer(zpl, printer)
         results.append(result)
         if not result['success']:
             break
@@ -644,10 +752,11 @@ def api_print_colis():
     
     zpl = generate_zpl_colis(data, config)
     numero_imprime = format_numero(config['colis']['compteur'])
+    printer = get_printer(config, config['colis'].get('printer', 'zebra1'))
     
     results = []
     for i in range(copies):
-        result = send_zpl(zpl, config)
+        result = send_zpl_to_printer(zpl, printer)
         results.append(result)
         if not result['success']:
             break
@@ -708,22 +817,7 @@ def api_update():
         return jsonify({'success': False, 'message': str(e)})
 
 
-@app.route('/api/test', methods=['POST'])
-def api_test():
-    config = load_config()
-    test_zpl = f"""^XA
-^CI28
-^PW812
-^LL203
-^FO50,30^A0N,40,40^FDTEST IMPRIMANTE^FS
-^FO50,80^A0N,25,25^FDMALLO BOIS - Raspberry Pi^FS
-^FO50,120^A0N,20,20^FD{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}^FS
-^XZ"""
-    result = send_zpl(test_zpl, config)
-    return jsonify(result)
-
-
-# Initialisation au chargement du module
+# Initialisation
 if not CONFIG_FILE.exists():
     save_config(DEFAULT_CONFIG)
 init_google_sheets()
