@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paramètres - MALLO BOIS</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #fff;
+            border-bottom: 1px solid #e5e5e7;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back {
+            color: #007aff;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        main {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            margin-bottom: 1rem;
+        }
+
+        .card h2 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e5e5e7;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #86868b;
+            margin-bottom: 0.375rem;
+        }
+
+        input {
+            width: 100%;
+            background: #f5f5f7;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: #1d1d1f;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: 2px solid #007aff;
+            outline-offset: -2px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: #007aff;
+            color: #fff;
+            width: 100%;
+        }
+
+        .btn-primary:hover { background: #0066d6; }
+
+        .btn-secondary {
+            background: #e5e5e7;
+            color: #1d1d1f;
+        }
+
+        .btn-secondary:hover { background: #d2d2d7; }
+
+        .btn:disabled {
+            background: #d2d2d7;
+            color: #86868b;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 0.875rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .message.show { display: block; }
+        .message.success { background: #d4edda; color: #155724; }
+        .message.error { background: #f8d7da; color: #721c24; }
+
+        .test-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #86868b;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="back">← Accueil</a>
+        <h1>Paramètres</h1>
+    </header>
+
+    <main>
+        <div id="message" class="message"></div>
+
+        <div class="card">
+            <h2>🖨️ Imprimante</h2>
+            <div class="test-row">
+                <div class="form-group">
+                    <label>Adresse IP</label>
+                    <input type="text" id="printer-ip" placeholder="192.168.1.67">
+                </div>
+                <div class="form-group" style="flex: 0 0 100px;">
+                    <label>Port</label>
+                    <input type="number" id="printer-port" value="9100">
+                </div>
+                <button class="btn btn-secondary" onclick="testPrinter()">Tester</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🪵 Tronçons</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Préfixe</label>
+                    <input type="text" id="troncons-prefixe" placeholder="TRO-">
+                </div>
+                <div class="form-group">
+                    <label>Série</label>
+                    <input type="text" id="troncons-serie" placeholder="2601">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Compteur actuel</label>
+                    <input type="number" id="troncons-compteur" min="0" max="999999">
+                </div>
+                <div class="form-group">
+                    <label>Copies par défaut</label>
+                    <input type="number" id="troncons-copies" min="1" max="50">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📦 Paquets</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Série</label>
+                    <input type="text" id="paquet-serie" placeholder="2601">
+                </div>
+                <div class="form-group">
+                    <label>Compteur actuel</label>
+                    <input type="number" id="paquet-compteur" min="0" max="999999">
+                </div>
+                <div class="form-group">
+                    <label>Copies par défaut</label>
+                    <input type="number" id="paquet-copies" min="1" max="50">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🚚 Colis</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Série</label>
+                    <input type="text" id="colis-serie" placeholder="2601">
+                </div>
+                <div class="form-group">
+                    <label>Compteur actuel</label>
+                    <input type="number" id="colis-compteur" min="0" max="999999">
+                </div>
+                <div class="form-group">
+                    <label>Copies par défaut</label>
+                    <input type="number" id="colis-copies" min="1" max="50">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveAll()">
+            Enregistrer les paramètres
+        </button>
+    </main>
+
+    <footer>
+        MALLO BOIS — Réguisheim
+    </footer>
+
+    <script>
+        let config = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+        });
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                config = await res.json();
+                updateUI();
+            } catch (e) {
+                showMessage('Erreur chargement', 'error');
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('printer-ip').value = config.printer.ip;
+            document.getElementById('printer-port').value = config.printer.port;
+
+            document.getElementById('troncons-prefixe').value = config.troncons.prefixe;
+            document.getElementById('troncons-serie').value = config.troncons.serie;
+            document.getElementById('troncons-compteur').value = config.troncons.compteur;
+            document.getElementById('troncons-copies').value = config.troncons.copies_defaut;
+
+            document.getElementById('paquet-serie').value = config.paquet.serie;
+            document.getElementById('paquet-compteur').value = config.paquet.compteur;
+            document.getElementById('paquet-copies').value = config.paquet.copies_defaut;
+
+            document.getElementById('colis-serie').value = config.colis.serie;
+            document.getElementById('colis-compteur').value = config.colis.compteur;
+            document.getElementById('colis-copies').value = config.colis.copies_defaut;
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'message show ' + type;
+            setTimeout(() => msg.classList.remove('show'), 4000);
+        }
+
+        async function testPrinter() {
+            try {
+                const res = await fetch('/api/test', { method: 'POST' });
+                const data = await res.json();
+                showMessage(data.message, data.success ? 'success' : 'error');
+            } catch (e) {
+                showMessage('Erreur communication', 'error');
+            }
+        }
+
+        async function saveAll() {
+            const data = {
+                printer: {
+                    ip: document.getElementById('printer-ip').value,
+                    port: parseInt(document.getElementById('printer-port').value)
+                },
+                troncons: {
+                    prefixe: document.getElementById('troncons-prefixe').value,
+                    serie: document.getElementById('troncons-serie').value,
+                    compteur: parseInt(document.getElementById('troncons-compteur').value),
+                    copies_defaut: parseInt(document.getElementById('troncons-copies').value)
+                },
+                paquet: {
+                    serie: document.getElementById('paquet-serie').value,
+                    compteur: parseInt(document.getElementById('paquet-compteur').value),
+                    copies_defaut: parseInt(document.getElementById('paquet-copies').value)
+                },
+                colis: {
+                    serie: document.getElementById('colis-serie').value,
+                    compteur: parseInt(document.getElementById('colis-compteur').value),
+                    copies_defaut: parseInt(document.getElementById('colis-copies').value)
+                }
+            };
+
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    config = result.config;
+                    showMessage('Paramètres enregistrés', 'success');
+                } else {
+                    showMessage('Erreur sauvegarde', 'error');
+                }
+            } catch (e) {
+                showMessage('Erreur communication', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

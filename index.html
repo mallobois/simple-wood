@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MALLO BOIS - Étiquettes</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #fff;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e5e7;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: #1d1d1f;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .menu-item {
+            background: #fff;
+            border: 1px solid #e5e5e7;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            text-decoration: none;
+            color: #1d1d1f;
+            transition: all 0.2s;
+        }
+
+        .menu-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+
+        .menu-item:active {
+            transform: translateY(0);
+        }
+
+        .menu-item .icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .menu-item h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .menu-item p {
+            color: #86868b;
+            font-size: 0.8rem;
+        }
+
+        .menu-item.settings {
+            grid-column: 1 / -1;
+            background: #f5f5f7;
+            border: 1px dashed #d2d2d7;
+            padding: 1rem;
+        }
+
+        .menu-item.settings .icon {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .menu-item.settings h2 {
+            font-size: 0.95rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #86868b;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">MB</div>
+            <h1>MALLO BOIS</h1>
+        </div>
+    </header>
+
+    <main>
+        <div class="menu">
+            <a href="/troncons" class="menu-item">
+                <div class="icon">🪵</div>
+                <h2>Tronçons</h2>
+                <p>QR code + numéro</p>
+            </a>
+
+            <a href="/paquets" class="menu-item">
+                <div class="icon">📦</div>
+                <h2>Paquets</h2>
+                <p>Sciages</p>
+            </a>
+
+            <a href="/colis" class="menu-item">
+                <div class="icon">🚚</div>
+                <h2>Colis</h2>
+                <p>Expédition</p>
+            </a>
+
+            <a href="/parametres" class="menu-item settings">
+                <div class="icon">⚙️</div>
+                <h2>Paramètres</h2>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        ÉTABLISSEMENTS MALLO BOIS SAS — Réguisheim
+    </footer>
+</body>
+</html>

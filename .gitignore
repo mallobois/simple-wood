@@ -1,0 +1,11 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Config locale
+config.json
+
+# OS
+.DS_Store
+Thumbs.db
