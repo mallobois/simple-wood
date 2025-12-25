@@ -2,10 +2,27 @@
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
 
-# Config locale
+# Config locale et secrets
 config.json
+credentials.json
+*.secret
+*.key
+.env
 
 # OS
 .DS_Store
 Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
