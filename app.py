@@ -474,6 +474,32 @@ def api_preview(label_type):
     return jsonify({'success': True, 'zpl': zpl})
 
 
+@app.route('/api/update', methods=['POST'])
+def api_update():
+    """Met à jour le code depuis GitHub"""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ['git', 'pull'],
+            cwd=Path(__file__).parent,
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        if result.returncode == 0:
+            output = result.stdout.strip()
+            if 'Already up to date' in output:
+                return jsonify({'success': True, 'message': 'Déjà à jour'})
+            else:
+                return jsonify({'success': True, 'message': 'Mise à jour effectuée. Redémarrez le serveur.'})
+        else:
+            return jsonify({'success': False, 'message': f'Erreur: {result.stderr}'})
+    except subprocess.TimeoutExpired:
+        return jsonify({'success': False, 'message': 'Timeout - vérifiez la connexion'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
 @app.route('/api/test', methods=['POST'])
 def api_test():
     """Test de connexion à l'imprimante"""

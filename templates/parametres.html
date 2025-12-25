@@ -235,6 +235,16 @@
         <button class="btn btn-primary" onclick="saveAll()">
             Enregistrer les paramètres
         </button>
+
+        <div class="card" style="margin-top: 1rem; background: #f5f5f7;">
+            <h2>🔄 Mise à jour</h2>
+            <p style="font-size: 0.85rem; color: #86868b; margin-bottom: 1rem;">
+                Télécharge la dernière version depuis GitHub
+            </p>
+            <button class="btn btn-secondary" onclick="updateCode()" style="width: 100%;">
+                Mettre à jour
+            </button>
+        </div>
     </main>
 
     <footer>
@@ -286,6 +296,18 @@
         async function testPrinter() {
             try {
                 const res = await fetch('/api/test', { method: 'POST' });
+                const data = await res.json();
+                showMessage(data.message, data.success ? 'success' : 'error');
+            } catch (e) {
+                showMessage('Erreur communication', 'error');
+            }
+        }
+
+        async function updateCode() {
+            if (!confirm('Mettre à jour depuis GitHub ?')) return;
+            
+            try {
+                const res = await fetch('/api/update', { method: 'POST' });
                 const data = await res.json();
                 showMessage(data.message, data.success ? 'success' : 'error');
             } catch (e) {
