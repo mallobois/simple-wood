@@ -370,6 +370,27 @@ def page_parametres():
     return render_template('parametres.html', config=config)
 
 
+@app.route('/api/users', methods=['GET'])
+def api_get_users():
+    """Retourne la liste des utilisateurs (sans mots de passe)"""
+    users = get_users_from_sheets()
+    result = []
+    for uid, data in users.items():
+        nom = data.get('nom', uid)
+        # Générer les initiales
+        parts = nom.split()
+        if len(parts) >= 2:
+            initiales = parts[0][0].upper() + parts[-1][0].upper()
+        else:
+            initiales = nom[:2].upper()
+        result.append({
+            'id': uid,
+            'nom': nom,
+            'initiales': initiales
+        })
+    return jsonify(result)
+
+
 @app.route('/api/config', methods=['GET'])
 def api_get_config():
     config = load_config()

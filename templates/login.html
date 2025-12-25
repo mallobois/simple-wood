@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Connexion - MALLO BOIS</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,108 +15,206 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .login-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            width: 100%;
-            max-width: 360px;
+            padding: 1rem;
         }
 
         .logo {
             text-align: center;
-            margin-bottom: 2rem;
+            margin: 1rem 0;
         }
 
         .logo-icon {
-            width: 64px;
-            height: 64px;
+            width: 56px;
+            height: 56px;
             background: #1d1d1f;
-            border-radius: 16px;
+            border-radius: 14px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             color: #fff;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .logo h1 {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 600;
         }
 
         .logo p {
             color: #86868b;
-            font-size: 0.9rem;
-            margin-top: 0.25rem;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        label {
-            display: block;
             font-size: 0.8rem;
-            font-weight: 500;
-            color: #86868b;
-            margin-bottom: 0.5rem;
         }
 
-        input {
-            width: 100%;
-            background: #f5f5f7;
-            border: none;
-            border-radius: 8px;
-            padding: 0.875rem 1rem;
+        /* Sélection utilisateur */
+        .users-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            max-width: 400px;
+        }
+
+        .user-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: #fff;
+            border: 2px solid #e5e5e7;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 100px;
+        }
+
+        .user-btn:hover {
+            border-color: #007aff;
+            background: #f0f7ff;
+        }
+
+        .user-btn.selected {
+            border-color: #007aff;
+            background: #007aff;
+            color: #fff;
+        }
+
+        .user-btn.selected .user-icon {
+            background: #fff;
+            color: #007aff;
+        }
+
+        .user-icon {
+            width: 56px;
+            height: 56px;
+            background: #e5e5e7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 600;
             color: #1d1d1f;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* PIN */
+        .pin-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .pin-section.show {
+            display: flex;
+        }
+
+        .selected-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1.25rem;
+            background: #fff;
+            border-radius: 12px;
+        }
+
+        .selected-user .user-icon {
+            width: 40px;
+            height: 40px;
             font-size: 1rem;
         }
 
-        input:focus {
-            outline: 2px solid #007aff;
-            outline-offset: -2px;
+        .selected-user .user-name {
+            font-size: 1rem;
         }
 
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
+        .change-user {
+            margin-left: auto;
+            color: #007aff;
+            font-size: 0.85rem;
             cursor: pointer;
-            background: #007aff;
-            color: #fff;
-            margin-top: 1rem;
-            transition: background 0.2s;
         }
 
-        .btn:hover {
-            background: #0066d6;
+        .pin-display {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
-        .btn:disabled {
+        .pin-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
             background: #d2d2d7;
-            cursor: not-allowed;
+            transition: all 0.15s;
+        }
+
+        .pin-dot.filled {
+            background: #1d1d1f;
+        }
+
+        .pin-dot.error {
+            background: #ff3b30;
+        }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .num-btn {
+            aspect-ratio: 1.2;
+            font-size: 1.75rem;
+            font-weight: 400;
+            background: #fff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .num-btn:hover {
+            background: #e5e5e7;
+        }
+
+        .num-btn:active {
+            background: #d2d2d7;
+            transform: scale(0.95);
+        }
+
+        .num-btn.action {
+            background: transparent;
+            font-size: 1.25rem;
+        }
+
+        .num-btn.action:hover {
+            background: #f5f5f7;
         }
 
         .message {
-            padding: 0.875rem 1rem;
+            padding: 0.75rem 1rem;
             border-radius: 8px;
             margin-bottom: 1rem;
-            display: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-align: center;
             background: #f8d7da;
             color: #721c24;
+            display: none;
         }
 
         .message.show {
@@ -124,33 +222,49 @@
         }
 
         footer {
-            margin-top: 2rem;
+            margin-top: auto;
+            padding: 1rem;
             color: #86868b;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <div class="logo">
-            <div class="logo-icon">MB</div>
-            <h1>MALLO BOIS</h1>
-            <p>WoodStock by Happy*Business</p>
+    <div class="logo">
+        <div class="logo-icon">MB</div>
+        <h1>MALLO BOIS</h1>
+        <p>WoodStock by Happy*Business</p>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <!-- Sélection utilisateur -->
+    <div id="user-select" class="users-grid"></div>
+
+    <!-- Saisie PIN -->
+    <div id="pin-section" class="pin-section">
+        <div class="selected-user">
+            <div class="user-icon" id="selected-icon">?</div>
+            <span class="user-name" id="selected-name">—</span>
+            <span class="change-user" onclick="backToUsers()">Changer</span>
         </div>
 
-        <div id="message" class="message"></div>
+        <div class="pin-display" id="pin-display"></div>
 
-        <div class="form-group">
-            <label>Identifiant</label>
-            <input type="text" id="username" placeholder="Entrez votre identifiant" autofocus>
+        <div class="numpad">
+            <button class="num-btn" onclick="addDigit('1')">1</button>
+            <button class="num-btn" onclick="addDigit('2')">2</button>
+            <button class="num-btn" onclick="addDigit('3')">3</button>
+            <button class="num-btn" onclick="addDigit('4')">4</button>
+            <button class="num-btn" onclick="addDigit('5')">5</button>
+            <button class="num-btn" onclick="addDigit('6')">6</button>
+            <button class="num-btn" onclick="addDigit('7')">7</button>
+            <button class="num-btn" onclick="addDigit('8')">8</button>
+            <button class="num-btn" onclick="addDigit('9')">9</button>
+            <button class="num-btn action" onclick="clearPin()">✕</button>
+            <button class="num-btn" onclick="addDigit('0')">0</button>
+            <button class="num-btn action" onclick="backspace()">⌫</button>
         </div>
-
-        <div class="form-group">
-            <label>Mot de passe</label>
-            <input type="password" id="password" placeholder="Entrez votre mot de passe">
-        </div>
-
-        <button class="btn" onclick="login()">Se connecter</button>
     </div>
 
     <footer>
@@ -158,38 +272,119 @@
     </footer>
 
     <script>
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') login();
-        });
-        document.getElementById('username').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') document.getElementById('password').focus();
-        });
+        let users = [];
+        let selectedUser = null;
+        let pin = '';
+        const MAX_PIN = 8;
+        const MIN_PIN = 6;
 
-        async function login() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
+        document.addEventListener('DOMContentLoaded', loadUsers);
 
-            if (!username || !password) {
-                showMessage('Veuillez remplir tous les champs');
-                return;
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/users');
+                users = await res.json();
+                renderUsers();
+            } catch (e) {
+                showMessage('Erreur chargement utilisateurs');
             }
+        }
+
+        function renderUsers() {
+            const grid = document.getElementById('user-select');
+            grid.innerHTML = users.map(u => `
+                <div class="user-btn" onclick="selectUser('${u.id}')">
+                    <div class="user-icon">${u.initiales}</div>
+                    <span class="user-name">${u.nom}</span>
+                </div>
+            `).join('');
+        }
+
+        function selectUser(id) {
+            selectedUser = users.find(u => u.id === id);
+            if (!selectedUser) return;
+
+            document.getElementById('selected-icon').textContent = selectedUser.initiales;
+            document.getElementById('selected-name').textContent = selectedUser.nom;
+            
+            document.getElementById('user-select').style.display = 'none';
+            document.getElementById('pin-section').classList.add('show');
+            
+            pin = '';
+            updatePinDisplay();
+        }
+
+        function backToUsers() {
+            document.getElementById('user-select').style.display = 'flex';
+            document.getElementById('pin-section').classList.remove('show');
+            selectedUser = null;
+            pin = '';
+        }
+
+        function updatePinDisplay() {
+            const display = document.getElementById('pin-display');
+            let dots = '';
+            for (let i = 0; i < MAX_PIN; i++) {
+                const filled = i < pin.length ? 'filled' : '';
+                const required = i < MIN_PIN ? '' : 'style="opacity:0.5"';
+                dots += `<div class="pin-dot ${filled}" ${required}></div>`;
+            }
+            display.innerHTML = dots;
+        }
+
+        function addDigit(d) {
+            if (pin.length >= MAX_PIN) return;
+            pin += d;
+            updatePinDisplay();
+            
+            // Auto-submit quand PIN complet (6+ chiffres)
+            if (pin.length >= MIN_PIN) {
+                // Petit délai pour voir le dernier point
+                setTimeout(() => tryLogin(), 150);
+            }
+        }
+
+        function backspace() {
+            pin = pin.slice(0, -1);
+            updatePinDisplay();
+        }
+
+        function clearPin() {
+            pin = '';
+            updatePinDisplay();
+        }
+
+        async function tryLogin() {
+            if (!selectedUser || pin.length < MIN_PIN) return;
 
             try {
                 const res = await fetch('/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ 
+                        username: selectedUser.id, 
+                        password: pin 
+                    })
                 });
                 const data = await res.json();
 
                 if (data.success) {
                     window.location.href = '/';
                 } else {
-                    showMessage(data.message || 'Erreur de connexion');
+                    showMessage('Code PIN incorrect');
+                    shakePinDisplay();
+                    pin = '';
+                    updatePinDisplay();
                 }
             } catch (e) {
                 showMessage('Erreur de communication');
             }
+        }
+
+        function shakePinDisplay() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach(d => d.classList.add('error'));
+            setTimeout(() => dots.forEach(d => d.classList.remove('error')), 500);
         }
 
         function showMessage(text) {
