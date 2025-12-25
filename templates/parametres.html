@@ -108,7 +108,7 @@
             border-radius: 16px;
             padding: 1.5rem;
             width: 90%;
-            max-width: 450px;
+            max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -139,7 +139,6 @@
         .message.show { display: block; }
         .message.success { background: #d4edda; color: #155724; }
         .message.error { background: #f8d7da; color: #721c24; }
-        /* Checkboxes postes */
         .postes-checkboxes {
             display: flex;
             flex-wrap: wrap;
@@ -154,6 +153,31 @@
             border-radius: 6px;
         }
         .poste-checkbox input { width: 16px; height: 16px; }
+        /* Table values */
+        .values-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        .value-item {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-bottom: 1px solid #f0f0f0;
+            gap: 0.5rem;
+        }
+        .value-item input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #e5e5e7;
+            border-radius: 6px;
+        }
+        .value-item .btn-icon { width: 28px; height: 28px; }
+        .add-value-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .add-value-row input { flex: 1; }
     </style>
 </head>
 <body>
@@ -164,6 +188,13 @@
 
     <main>
         <div id="message" class="message"></div>
+
+        <!-- TABLES -->
+        <div class="section">
+            <h2>Tables de référence</h2>
+            <ul class="item-list" id="table-list"></ul>
+            <button class="btn add-btn" onclick="openTableModal()">+ Nouvelle table</button>
+        </div>
 
         <!-- POSTES -->
         <div class="section">
@@ -192,6 +223,43 @@
             <button class="btn secondary" onclick="updateApp()">Mettre à jour depuis GitHub</button>
         </div>
     </main>
+
+    <!-- Modal Table -->
+    <div class="modal" id="table-modal">
+        <div class="modal-content">
+            <h3 id="table-modal-title">Nouvelle table</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ID</label>
+                    <input type="text" id="table-id" placeholder="essences">
+                </div>
+                <div class="form-group">
+                    <label>Nom</label>
+                    <input type="text" id="table-nom" placeholder="Essences">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn secondary" onclick="closeTableModal()">Annuler</button>
+                <button class="btn" onclick="saveTable()">Créer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Valeurs Table -->
+    <div class="modal" id="values-modal">
+        <div class="modal-content">
+            <h3 id="values-modal-title">Valeurs</h3>
+            <div class="values-list" id="values-list"></div>
+            <div class="add-value-row">
+                <input type="text" id="new-value" placeholder="Nouvelle valeur">
+                <input type="text" id="new-desc" placeholder="Description (optionnel)" style="width:150px">
+                <button class="btn" onclick="addValue()">+</button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn secondary" onclick="closeValuesModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Poste -->
     <div class="modal" id="poste-modal">
@@ -319,6 +387,9 @@
         let printers = [];
         let postes = [];
         let users = [];
+        let tables = [];
+        let currentTableId = null;
+        let currentTableValues = [];
         let editingPrinter = null;
         let editingPoste = null;
         let editingUser = null;
@@ -328,25 +399,131 @@
         document.addEventListener('DOMContentLoaded', loadAll);
 
         async function loadAll() {
-            await Promise.all([loadPrinters(), loadPostes(), loadUsers()]);
+            await Promise.all([loadTables(), loadPrinters(), loadPostes(), loadUsers()]);
         }
 
+        // === TABLES ===
+        async function loadTables() {
+            const res = await fetch('/api/tables');
+            tables = await res.json();
+            renderTables();
+        }
+
+        function renderTables() {
+            document.getElementById('table-list').innerHTML = tables.map(t => `
+                <li class="item">
+                    <div class="item-icon">📋</div>
+                    <div class="item-info">
+                        <div class="item-name">${t.nom}</div>
+                        <div class="item-detail">${t.id}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-icon" onclick="openValuesModal('${t.id}', '${t.nom}')">📝</button>
+                        <button class="btn-icon delete" onclick="deleteTable('${t.id}')">🗑️</button>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function openTableModal() {
+            document.getElementById('table-id').value = '';
+            document.getElementById('table-nom').value = '';
+            document.getElementById('table-modal').classList.add('show');
+        }
+
+        function closeTableModal() {
+            document.getElementById('table-modal').classList.remove('show');
+        }
+
+        async function saveTable() {
+            const data = {
+                id: document.getElementById('table-id').value.trim(),
+                nom: document.getElementById('table-nom').value.trim()
+            };
+            const res = await fetch('/api/tables', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                showMessage('Table créée', 'success');
+                closeTableModal();
+                loadTables();
+            } else {
+                showMessage(result.message, 'error');
+            }
+        }
+
+        function deleteTable(id) {
+            deleteType = 'table';
+            deleteId = id;
+            document.getElementById('delete-modal').classList.add('show');
+        }
+
+        // Valeurs
+        async function openValuesModal(tableId, tableName) {
+            currentTableId = tableId;
+            document.getElementById('values-modal-title').textContent = tableName;
+            await loadTableValues();
+            document.getElementById('values-modal').classList.add('show');
+        }
+
+        function closeValuesModal() {
+            document.getElementById('values-modal').classList.remove('show');
+            currentTableId = null;
+        }
+
+        async function loadTableValues() {
+            const res = await fetch('/api/tables/' + currentTableId + '/values');
+            currentTableValues = await res.json();
+            renderValues();
+        }
+
+        function renderValues() {
+            document.getElementById('values-list').innerHTML = currentTableValues.map(v => `
+                <div class="value-item">
+                    <input type="text" value="${v.Valeur}" onchange="updateValue(${v.ID}, this.value, '${v.Description || ''}')">
+                    <input type="text" value="${v.Description || ''}" placeholder="Description" style="width:120px" onchange="updateValue(${v.ID}, '${v.Valeur}', this.value)">
+                    <button class="btn-icon delete" onclick="deleteValue(${v.ID})">🗑️</button>
+                </div>
+            `).join('') || '<p style="color:#86868b;text-align:center;padding:1rem;">Aucune valeur</p>';
+        }
+
+        async function addValue() {
+            const valeur = document.getElementById('new-value').value.trim();
+            const description = document.getElementById('new-desc').value.trim();
+            if (!valeur) return;
+
+            await fetch('/api/tables/' + currentTableId + '/values', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ valeur, description })
+            });
+
+            document.getElementById('new-value').value = '';
+            document.getElementById('new-desc').value = '';
+            loadTableValues();
+        }
+
+        async function updateValue(id, valeur, description) {
+            await fetch('/api/tables/' + currentTableId + '/values/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ valeur, description, actif: 'oui' })
+            });
+        }
+
+        async function deleteValue(id) {
+            await fetch('/api/tables/' + currentTableId + '/values/' + id, { method: 'DELETE' });
+            loadTableValues();
+        }
+
+        // === PRINTERS ===
         async function loadPrinters() {
             const res = await fetch('/api/printers');
             printers = await res.json();
             renderPrinters();
-        }
-
-        async function loadPostes() {
-            const res = await fetch('/api/postes');
-            postes = await res.json();
-            renderPostes();
-        }
-
-        async function loadUsers() {
-            const res = await fetch('/api/users/full');
-            users = await res.json();
-            renderUsers();
         }
 
         function renderPrinters() {
@@ -366,6 +543,13 @@
             `).join('');
         }
 
+        // === POSTES ===
+        async function loadPostes() {
+            const res = await fetch('/api/postes');
+            postes = await res.json();
+            renderPostes();
+        }
+
         function renderPostes() {
             document.getElementById('poste-list').innerHTML = postes.map(p => `
                 <li class="item">
@@ -381,6 +565,13 @@
                 </li>
             `).join('');
             updatePrinterSelects();
+        }
+
+        // === USERS ===
+        async function loadUsers() {
+            const res = await fetch('/api/users/full');
+            users = await res.json();
+            renderUsers();
         }
 
         function renderUsers() {
@@ -405,7 +596,7 @@
             document.getElementById('poste-printer').innerHTML = opts;
         }
 
-        // === POSTES ===
+        // === MODALS POSTES ===
         function openPosteModal(id = null) {
             editingPoste = id;
             updatePrinterSelects();
@@ -459,7 +650,7 @@
             }
         }
 
-        // === IMPRIMANTES ===
+        // === MODALS IMPRIMANTES ===
         function openPrinterModal(id = null) {
             editingPrinter = id;
             if (id) {
@@ -512,10 +703,9 @@
             showMessage(result.success ? 'Test OK' : result.message, result.success ? 'success' : 'error');
         }
 
-        // === UTILISATEURS ===
+        // === MODALS UTILISATEURS ===
         function openUserModal(id = null) {
             editingUser = id;
-            // Render postes checkboxes
             document.getElementById('user-postes').innerHTML = postes.map(p => `
                 <label class="poste-checkbox">
                     <input type="checkbox" value="${p.id}" id="up-${p.id}">
@@ -589,6 +779,7 @@
             let url;
             if (deleteType === 'printer') url = '/api/printers/' + deleteId;
             else if (deleteType === 'poste') url = '/api/postes/' + deleteId;
+            else if (deleteType === 'table') url = '/api/tables/' + deleteId;
             else url = '/api/users/' + deleteId;
 
             const res = await fetch(url, { method: 'DELETE' });
@@ -597,6 +788,7 @@
                 showMessage('Supprimé', 'success');
                 if (deleteType === 'printer') loadPrinters();
                 else if (deleteType === 'poste') loadPostes();
+                else if (deleteType === 'table') loadTables();
                 else loadUsers();
             } else {
                 showMessage(result.message, 'error');

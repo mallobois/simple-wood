@@ -135,6 +135,90 @@ def get_poste_history(poste_id: str, limit: int = 50) -> list:
         return []
 
 
+# ============== TABLES DE REFERENCE ==============
+
+def get_or_create_table_sheet(table_id: str, table_nom: str):
+    """Crée ou récupère l'onglet Google Sheets pour une table"""
+    if spreadsheet is None:
+        return None
+    sheet_name = f"Table_{table_id}"
+    try:
+        return spreadsheet.worksheet(sheet_name)
+    except gspread.WorksheetNotFound:
+        sheet = spreadsheet.add_worksheet(title=sheet_name, rows=500, cols=10)
+        sheet.append_row(['ID', 'Valeur', 'Description', 'Actif'])
+        print(f"✓ Table {table_nom} créée")
+        return sheet
+
+
+def get_table_values(table_id: str) -> list:
+    """Récupère les valeurs d'une table"""
+    if spreadsheet is None:
+        return []
+    try:
+        sheet_name = f"Table_{table_id}"
+        sheet = spreadsheet.worksheet(sheet_name)
+        records = sheet.get_all_records()
+        return [r for r in records if r.get('Actif', 'oui').lower() != 'non']
+    except:
+        return []
+
+
+def add_table_value(table_id: str, valeur: str, description: str = '') -> bool:
+    """Ajoute une valeur à une table"""
+    if spreadsheet is None:
+        return False
+    try:
+        sheet_name = f"Table_{table_id}"
+        sheet = spreadsheet.worksheet(sheet_name)
+        records = sheet.get_all_records()
+        new_id = len(records) + 1
+        sheet.append_row([new_id, valeur, description, 'oui'])
+        return True
+    except Exception as e:
+        print(f"Erreur ajout table: {e}")
+        return False
+
+
+def update_table_value(table_id: str, row_id: int, valeur: str, description: str, actif: str) -> bool:
+    """Met à jour une valeur dans une table"""
+    if spreadsheet is None:
+        return False
+    try:
+        sheet_name = f"Table_{table_id}"
+        sheet = spreadsheet.worksheet(sheet_name)
+        records = sheet.get_all_records()
+        for i, row in enumerate(records):
+            if row.get('ID') == row_id:
+                row_num = i + 2
+                sheet.update_cell(row_num, 2, valeur)
+                sheet.update_cell(row_num, 3, description)
+                sheet.update_cell(row_num, 4, actif)
+                return True
+        return False
+    except Exception as e:
+        print(f"Erreur update table: {e}")
+        return False
+
+
+def delete_table_value(table_id: str, row_id: int) -> bool:
+    """Supprime une valeur d'une table"""
+    if spreadsheet is None:
+        return False
+    try:
+        sheet_name = f"Table_{table_id}"
+        sheet = spreadsheet.worksheet(sheet_name)
+        records = sheet.get_all_records()
+        for i, row in enumerate(records):
+            if row.get('ID') == row_id:
+                sheet.delete_rows(i + 2)
+                return True
+        return False
+    except Exception as e:
+        print(f"Erreur delete table: {e}")
+        return False
+
+
 # ============== UTILISATEURS ==============
 
 def get_users_from_sheets() -> dict:
@@ -189,6 +273,11 @@ DEFAULT_CONFIG = {
             'copies_defaut': 1,
             'champs': []
         }
+    ],
+    'tables': [
+        {'id': 'essences', 'nom': 'Essences'},
+        {'id': 'forets', 'nom': 'Forêts'},
+        {'id': 'lots', 'nom': 'Lots'}
     ],
     'utilisateur': {'nom': 'Opérateur', 'site': 'MALLO BOIS'}
 }
@@ -652,6 +741,100 @@ def api_delete_poste(poste_id):
     config['postes'] = [p for p in config['postes'] if p['id'] != poste_id]
     save_config(config)
     return jsonify({'success': True})
+
+
+# ============== API TABLES ==============
+
+@app.route('/api/tables', methods=['GET'])
+def api_get_tables():
+    config = load_config()
+    return jsonify(config.get('tables', []))
+
+
+@app.route('/api/tables', methods=['POST'])
+def api_create_table():
+    config = load_config()
+    data = request.json
+    
+    tid = data.get('id', '').strip().lower().replace(' ', '_')
+    nom = data.get('nom', '').strip()
+    
+    if not tid or not nom:
+        return jsonify({'success': False, 'message': 'ID et nom requis'})
+    
+    for t in config.get('tables', []):
+        if t['id'] == tid:
+            return jsonify({'success': False, 'message': 'ID déjà utilisé'})
+    
+    if 'tables' not in config:
+        config['tables'] = []
+    
+    config['tables'].append({'id': tid, 'nom': nom})
+    save_config(config)
+    
+    # Créer l'onglet Google Sheets
+    get_or_create_table_sheet(tid, nom)
+    
+    return jsonify({'success': True})
+
+
+@app.route('/api/tables/<table_id>', methods=['DELETE'])
+def api_delete_table(table_id):
+    config = load_config()
+    config['tables'] = [t for t in config.get('tables', []) if t['id'] != table_id]
+    save_config(config)
+    # Note: on ne supprime pas l'onglet Google Sheets pour garder l'historique
+    return jsonify({'success': True})
+
+
+@app.route('/api/tables/<table_id>/values', methods=['GET'])
+def api_get_table_values(table_id):
+    # S'assurer que l'onglet existe
+    config = load_config()
+    table = next((t for t in config.get('tables', []) if t['id'] == table_id), None)
+    if table:
+        get_or_create_table_sheet(table_id, table['nom'])
+    values = get_table_values(table_id)
+    return jsonify(values)
+
+
+@app.route('/api/tables/<table_id>/values', methods=['POST'])
+def api_add_table_value(table_id):
+    data = request.json
+    valeur = data.get('valeur', '').strip()
+    description = data.get('description', '').strip()
+    
+    if not valeur:
+        return jsonify({'success': False, 'message': 'Valeur requise'})
+    
+    # S'assurer que l'onglet existe
+    config = load_config()
+    table = next((t for t in config.get('tables', []) if t['id'] == table_id), None)
+    if table:
+        get_or_create_table_sheet(table_id, table['nom'])
+    
+    success = add_table_value(table_id, valeur, description)
+    return jsonify({'success': success})
+
+
+@app.route('/api/tables/<table_id>/values/<int:row_id>', methods=['PUT'])
+def api_update_table_value(table_id, row_id):
+    data = request.json
+    valeur = data.get('valeur', '').strip()
+    description = data.get('description', '').strip()
+    actif = data.get('actif', 'oui')
+    
+    if not valeur:
+        return jsonify({'success': False, 'message': 'Valeur requise'})
+    
+    success = update_table_value(table_id, row_id, valeur, description, actif)
+    return jsonify({'success': success})
+
+
+@app.route('/api/tables/<table_id>/values/<int:row_id>', methods=['DELETE'])
+def api_delete_table_value(table_id, row_id):
+    success = delete_table_value(table_id, row_id)
+    return jsonify({'success': success})
 
 
 # ============== API IMPRESSION ==============
