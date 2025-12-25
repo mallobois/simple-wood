@@ -48,6 +48,7 @@ ESSENCES_DATA = [
     {"code": "CHE", "nom": "Chêne indigène", "nom_latin": "Quercus", "densite_frais": 1070, "densite_sec": 720, "psf": 29, "retrait_t": 10.0},
     {"code": "CHS", "nom": "Chêne sessile", "nom_latin": "Quercus petraea", "densite_frais": 1070, "densite_sec": 720, "psf": 29, "retrait_t": 9.8},
     {"code": "CHP", "nom": "Chêne pédonculé", "nom_latin": "Quercus robur", "densite_frais": 1070, "densite_sec": 720, "psf": 29, "retrait_t": 10.2},
+    {"code": "CHR", "nom": "Chêne rouge", "nom_latin": "Quercus rubra", "densite_frais": 1000, "densite_sec": 660, "psf": 27, "retrait_t": 8.6},
     # Feuillus - Frênes
     {"code": "FRE", "nom": "Frêne", "nom_latin": "Fraxinus", "densite_frais": 920, "densite_sec": 680, "psf": 28, "retrait_t": 8.0},
     {"code": "FRC", "nom": "Frêne commun", "nom_latin": "Fraxinus excelsior", "densite_frais": 920, "densite_sec": 680, "psf": 28, "retrait_t": 8.0},
@@ -55,6 +56,7 @@ ESSENCES_DATA = [
     {"code": "CHT", "nom": "Châtaignier", "nom_latin": "Castanea sativa", "densite_frais": 950, "densite_sec": 590, "psf": 30, "retrait_t": 6.5},
     {"code": "MER", "nom": "Merisier", "nom_latin": "Prunus avium", "densite_frais": 900, "densite_sec": 620, "psf": 29, "retrait_t": 7.5},
     {"code": "NOY", "nom": "Noyer", "nom_latin": "Juglans regia", "densite_frais": 900, "densite_sec": 680, "psf": 27, "retrait_t": 7.5},
+    {"code": "NON", "nom": "Noyer noir", "nom_latin": "Juglans nigra", "densite_frais": 900, "densite_sec": 610, "psf": 26, "retrait_t": 7.8},
     {"code": "ROB", "nom": "Robinier", "nom_latin": "Robinia pseudoacacia", "densite_frais": 950, "densite_sec": 770, "psf": 26, "retrait_t": 5.0},
     # Feuillus - Érables
     {"code": "ERP", "nom": "Érable plane", "nom_latin": "Acer platanoides", "densite_frais": 900, "densite_sec": 650, "psf": 29, "retrait_t": 8.0},
@@ -97,7 +99,7 @@ PRODUITS_DATA = [
 #          ep_frais = ep_sec / (1 - retrait_effectif)
 
 HUMIDITE_CIBLE = 8  # %
-EPAISSEURS_CIBLES = [27, 32, 45, 50, 80]  # mm sec
+EPAISSEURS_CIBLES = [18, 27, 32, 45, 50, 80]  # mm sec
 
 
 def _calculer_epaisseurs():
@@ -295,27 +297,57 @@ def init_users_sheet():
 
 
 def init_reference_tables():
-    """Initialise les tables de référence si vides"""
+    """Synchronise les tables de référence (ajoute les entrées manquantes)"""
     if spreadsheet is None:
         return
     
     config = load_config()
-    tables_to_init = [
-        ('essences', ESSENCES_DATA),
-        ('produits', PRODUITS_DATA),
-        ('epaisseurs', EPAISSEURS_DATA),
-    ]
     
-    for table_id, data in tables_to_init:
-        table_cfg = next((t for t in config.get('tables', []) if t['id'] == table_id), None)
-        if table_cfg:
-            existing = get_table_values(table_id)
-            if len(existing) == 0:
-                print(f"  → Initialisation {table_id}...")
-                get_or_create_table_sheet(table_id, table_cfg)
-                for item in data:
-                    add_table_value(table_id, table_cfg, item)
-                print(f"    {len(data)} entrées ajoutées")
+    # Essences - clé unique: code
+    table_cfg = next((t for t in config.get('tables', []) if t['id'] == 'essences'), None)
+    if table_cfg:
+        get_or_create_table_sheet('essences', table_cfg)
+        existing = get_table_values('essences')
+        existing_codes = {str(e.get('Code', '')).upper() for e in existing}
+        added = 0
+        for item in ESSENCES_DATA:
+            if item['code'].upper() not in existing_codes:
+                add_table_value('essences', table_cfg, item)
+                added += 1
+        if added:
+            print(f"  → Essences: {added} ajoutée(s)")
+    
+    # Produits - clé unique: code
+    table_cfg = next((t for t in config.get('tables', []) if t['id'] == 'produits'), None)
+    if table_cfg:
+        get_or_create_table_sheet('produits', table_cfg)
+        existing = get_table_values('produits')
+        existing_codes = {str(e.get('Code', '')).upper() for e in existing}
+        added = 0
+        for item in PRODUITS_DATA:
+            if item['code'].upper() not in existing_codes:
+                add_table_value('produits', table_cfg, item)
+                added += 1
+        if added:
+            print(f"  → Produits: {added} ajouté(s)")
+    
+    # Épaisseurs - clé unique: (essence, ep_sec)
+    table_cfg = next((t for t in config.get('tables', []) if t['id'] == 'epaisseurs'), None)
+    if table_cfg:
+        get_or_create_table_sheet('epaisseurs', table_cfg)
+        existing = get_table_values('epaisseurs')
+        existing_keys = {
+            (str(e.get('Essence', '')).upper(), int(e.get('Ép. sec (mm)', 0) or 0))
+            for e in existing
+        }
+        added = 0
+        for item in EPAISSEURS_DATA:
+            key = (item['essence'].upper(), item['ep_sec'])
+            if key not in existing_keys:
+                add_table_value('epaisseurs', table_cfg, item)
+                added += 1
+        if added:
+            print(f"  → Épaisseurs: {added} ajoutée(s)")
 
 
 def get_or_create_poste_sheet(poste_id: str, poste_config: dict):
