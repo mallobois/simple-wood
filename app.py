@@ -137,21 +137,23 @@ def get_poste_history(poste_id: str, limit: int = 50) -> list:
 
 # ============== TABLES DE REFERENCE ==============
 
-def get_or_create_table_sheet(table_id: str, table_nom: str):
+def get_or_create_table_sheet(table_id: str, table_config: dict):
     """Crée ou récupère l'onglet Google Sheets pour une table"""
     if spreadsheet is None:
         return None
     sheet_name = f"Table_{table_id}"
+    colonnes = table_config.get('colonnes', [{'id': 'valeur', 'nom': 'Valeur'}])
     try:
         return spreadsheet.worksheet(sheet_name)
     except gspread.WorksheetNotFound:
-        sheet = spreadsheet.add_worksheet(title=sheet_name, rows=500, cols=10)
-        sheet.append_row(['ID', 'Valeur', 'Description', 'Actif'])
-        print(f"✓ Table {table_nom} créée")
+        sheet = spreadsheet.add_worksheet(title=sheet_name, rows=500, cols=len(colonnes) + 1)
+        headers = ['ID'] + [c['nom'] for c in colonnes]
+        sheet.append_row(headers)
+        print(f"✓ Table {table_config.get('nom', table_id)} créée")
         return sheet
 
 
-def get_table_values(table_id: str) -> list:
+def get_table_values(table_id: str, table_config: dict = None) -> list:
     """Récupère les valeurs d'une table"""
     if spreadsheet is None:
         return []
@@ -159,12 +161,12 @@ def get_table_values(table_id: str) -> list:
         sheet_name = f"Table_{table_id}"
         sheet = spreadsheet.worksheet(sheet_name)
         records = sheet.get_all_records()
-        return [r for r in records if r.get('Actif', 'oui').lower() != 'non']
+        return records
     except:
         return []
 
 
-def add_table_value(table_id: str, valeur: str, description: str = '') -> bool:
+def add_table_value(table_id: str, table_config: dict, data: dict) -> bool:
     """Ajoute une valeur à une table"""
     if spreadsheet is None:
         return False
@@ -173,14 +175,20 @@ def add_table_value(table_id: str, valeur: str, description: str = '') -> bool:
         sheet = spreadsheet.worksheet(sheet_name)
         records = sheet.get_all_records()
         new_id = len(records) + 1
-        sheet.append_row([new_id, valeur, description, 'oui'])
+        
+        colonnes = table_config.get('colonnes', [])
+        row = [new_id]
+        for col in colonnes:
+            row.append(data.get(col['id'], ''))
+        
+        sheet.append_row(row)
         return True
     except Exception as e:
         print(f"Erreur ajout table: {e}")
         return False
 
 
-def update_table_value(table_id: str, row_id: int, valeur: str, description: str, actif: str) -> bool:
+def update_table_value(table_id: str, table_config: dict, row_id: int, data: dict) -> bool:
     """Met à jour une valeur dans une table"""
     if spreadsheet is None:
         return False
@@ -188,12 +196,14 @@ def update_table_value(table_id: str, row_id: int, valeur: str, description: str
         sheet_name = f"Table_{table_id}"
         sheet = spreadsheet.worksheet(sheet_name)
         records = sheet.get_all_records()
+        
+        colonnes = table_config.get('colonnes', [])
+        
         for i, row in enumerate(records):
             if row.get('ID') == row_id:
                 row_num = i + 2
-                sheet.update_cell(row_num, 2, valeur)
-                sheet.update_cell(row_num, 3, description)
-                sheet.update_cell(row_num, 4, actif)
+                for j, col in enumerate(colonnes):
+                    sheet.update_cell(row_num, j + 2, data.get(col['id'], ''))
                 return True
         return False
     except Exception as e:
@@ -275,9 +285,36 @@ DEFAULT_CONFIG = {
         }
     ],
     'tables': [
-        {'id': 'essences', 'nom': 'Essences'},
-        {'id': 'forets', 'nom': 'Forêts'},
-        {'id': 'lots', 'nom': 'Lots'}
+        {
+            'id': 'essences',
+            'nom': 'Essences',
+            'colonnes': [
+                {'id': 'code', 'nom': 'Code', 'type': 'text', 'width': 60},
+                {'id': 'nom', 'nom': 'Nom', 'type': 'text', 'width': 120},
+                {'id': 'nom_latin', 'nom': 'Nom latin', 'type': 'text', 'width': 150},
+                {'id': 'densite_frais', 'nom': 'Densité frais', 'type': 'number', 'width': 80},
+                {'id': 'densite_sec', 'nom': 'Densité sec', 'type': 'number', 'width': 80}
+            ]
+        },
+        {
+            'id': 'forets',
+            'nom': 'Forêts',
+            'colonnes': [
+                {'id': 'code', 'nom': 'Code', 'type': 'text', 'width': 60},
+                {'id': 'nom', 'nom': 'Nom', 'type': 'text', 'width': 150},
+                {'id': 'departement', 'nom': 'Département', 'type': 'text', 'width': 100}
+            ]
+        },
+        {
+            'id': 'lots',
+            'nom': 'Lots',
+            'colonnes': [
+                {'id': 'numero', 'nom': 'Numéro', 'type': 'text', 'width': 80},
+                {'id': 'foret', 'nom': 'Forêt', 'type': 'text', 'width': 120},
+                {'id': 'date_achat', 'nom': 'Date achat', 'type': 'text', 'width': 100},
+                {'id': 'volume', 'nom': 'Volume m³', 'type': 'number', 'width': 80}
+            ]
+        }
     ],
     'utilisateur': {'nom': 'Opérateur', 'site': 'MALLO BOIS'}
 }
@@ -758,6 +795,7 @@ def api_create_table():
     
     tid = data.get('id', '').strip().lower().replace(' ', '_')
     nom = data.get('nom', '').strip()
+    colonnes = data.get('colonnes', [{'id': 'valeur', 'nom': 'Valeur', 'type': 'text'}])
     
     if not tid or not nom:
         return jsonify({'success': False, 'message': 'ID et nom requis'})
@@ -769,13 +807,29 @@ def api_create_table():
     if 'tables' not in config:
         config['tables'] = []
     
-    config['tables'].append({'id': tid, 'nom': nom})
+    table_config = {'id': tid, 'nom': nom, 'colonnes': colonnes}
+    config['tables'].append(table_config)
     save_config(config)
     
-    # Créer l'onglet Google Sheets
-    get_or_create_table_sheet(tid, nom)
+    get_or_create_table_sheet(tid, table_config)
     
     return jsonify({'success': True})
+
+
+@app.route('/api/tables/<table_id>', methods=['PUT'])
+def api_update_table(table_id):
+    config = load_config()
+    data = request.json
+    
+    for t in config.get('tables', []):
+        if t['id'] == table_id:
+            t['nom'] = data.get('nom', t['nom'])
+            if 'colonnes' in data:
+                t['colonnes'] = data['colonnes']
+            save_config(config)
+            return jsonify({'success': True})
+    
+    return jsonify({'success': False, 'message': 'Table non trouvée'})
 
 
 @app.route('/api/tables/<table_id>', methods=['DELETE'])
@@ -783,51 +837,44 @@ def api_delete_table(table_id):
     config = load_config()
     config['tables'] = [t for t in config.get('tables', []) if t['id'] != table_id]
     save_config(config)
-    # Note: on ne supprime pas l'onglet Google Sheets pour garder l'historique
     return jsonify({'success': True})
 
 
 @app.route('/api/tables/<table_id>/values', methods=['GET'])
 def api_get_table_values(table_id):
-    # S'assurer que l'onglet existe
     config = load_config()
-    table = next((t for t in config.get('tables', []) if t['id'] == table_id), None)
-    if table:
-        get_or_create_table_sheet(table_id, table['nom'])
-    values = get_table_values(table_id)
+    table_config = next((t for t in config.get('tables', []) if t['id'] == table_id), None)
+    if table_config:
+        get_or_create_table_sheet(table_id, table_config)
+    values = get_table_values(table_id, table_config)
     return jsonify(values)
 
 
 @app.route('/api/tables/<table_id>/values', methods=['POST'])
 def api_add_table_value(table_id):
-    data = request.json
-    valeur = data.get('valeur', '').strip()
-    description = data.get('description', '').strip()
-    
-    if not valeur:
-        return jsonify({'success': False, 'message': 'Valeur requise'})
-    
-    # S'assurer que l'onglet existe
     config = load_config()
-    table = next((t for t in config.get('tables', []) if t['id'] == table_id), None)
-    if table:
-        get_or_create_table_sheet(table_id, table['nom'])
+    table_config = next((t for t in config.get('tables', []) if t['id'] == table_id), None)
     
-    success = add_table_value(table_id, valeur, description)
+    if not table_config:
+        return jsonify({'success': False, 'message': 'Table non trouvée'})
+    
+    get_or_create_table_sheet(table_id, table_config)
+    
+    data = request.json
+    success = add_table_value(table_id, table_config, data)
     return jsonify({'success': success})
 
 
 @app.route('/api/tables/<table_id>/values/<int:row_id>', methods=['PUT'])
 def api_update_table_value(table_id, row_id):
+    config = load_config()
+    table_config = next((t for t in config.get('tables', []) if t['id'] == table_id), None)
+    
+    if not table_config:
+        return jsonify({'success': False, 'message': 'Table non trouvée'})
+    
     data = request.json
-    valeur = data.get('valeur', '').strip()
-    description = data.get('description', '').strip()
-    actif = data.get('actif', 'oui')
-    
-    if not valeur:
-        return jsonify({'success': False, 'message': 'Valeur requise'})
-    
-    success = update_table_value(table_id, row_id, valeur, description, actif)
+    success = update_table_value(table_id, table_config, row_id, data)
     return jsonify({'success': success})
 
 

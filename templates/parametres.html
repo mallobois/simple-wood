@@ -92,7 +92,6 @@
         .btn.secondary { background: #e5e5e7; color: #1d1d1f; }
         .btn.danger { background: #ff3b30; }
         .add-btn { width: 100%; padding: 1rem; margin-top: 1rem; }
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -108,7 +107,7 @@
             border-radius: 16px;
             padding: 1.5rem;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -154,30 +153,47 @@
         }
         .poste-checkbox input { width: 16px; height: 16px; }
         /* Table values */
-        .values-list {
-            max-height: 300px;
-            overflow-y: auto;
+        .values-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 1rem;
         }
-        .value-item {
-            display: flex;
-            align-items: center;
+        .values-table th {
+            text-align: left;
+            padding: 0.5rem;
+            font-size: 0.75rem;
+            color: #86868b;
+            border-bottom: 1px solid #e5e5e7;
+        }
+        .values-table td {
             padding: 0.5rem;
             border-bottom: 1px solid #f0f0f0;
-            gap: 0.5rem;
         }
-        .value-item input {
+        .values-table input {
+            width: 100%;
+            padding: 0.4rem;
+            border: 1px solid #e5e5e7;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .values-table .btn-icon { width: 28px; height: 28px; }
+        .add-row {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: #f9f9fb;
+            border-radius: 8px;
+        }
+        .add-row input {
             flex: 1;
             padding: 0.5rem;
             border: 1px solid #e5e5e7;
             border-radius: 6px;
         }
-        .value-item .btn-icon { width: 28px; height: 28px; }
-        .add-value-row {
-            display: flex;
-            gap: 0.5rem;
+        .values-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
         }
-        .add-value-row input { flex: 1; }
     </style>
 </head>
 <body>
@@ -224,6 +240,23 @@
         </div>
     </main>
 
+    <!-- Modal Valeurs Table -->
+    <div class="modal" id="values-modal">
+        <div class="modal-content">
+            <h3 id="values-modal-title">Valeurs</h3>
+            <div class="values-wrapper">
+                <table class="values-table" id="values-table">
+                    <thead id="values-thead"></thead>
+                    <tbody id="values-tbody"></tbody>
+                </table>
+            </div>
+            <div class="add-row" id="add-row"></div>
+            <div class="modal-actions">
+                <button class="btn secondary" onclick="closeValuesModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Table -->
     <div class="modal" id="table-modal">
         <div class="modal-content">
@@ -241,22 +274,6 @@
             <div class="modal-actions">
                 <button class="btn secondary" onclick="closeTableModal()">Annuler</button>
                 <button class="btn" onclick="saveTable()">Créer</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Valeurs Table -->
-    <div class="modal" id="values-modal">
-        <div class="modal-content">
-            <h3 id="values-modal-title">Valeurs</h3>
-            <div class="values-list" id="values-list"></div>
-            <div class="add-value-row">
-                <input type="text" id="new-value" placeholder="Nouvelle valeur">
-                <input type="text" id="new-desc" placeholder="Description (optionnel)" style="width:150px">
-                <button class="btn" onclick="addValue()">+</button>
-            </div>
-            <div class="modal-actions">
-                <button class="btn secondary" onclick="closeValuesModal()">Fermer</button>
             </div>
         </div>
     </div>
@@ -388,7 +405,7 @@
         let postes = [];
         let users = [];
         let tables = [];
-        let currentTableId = null;
+        let currentTable = null;
         let currentTableValues = [];
         let editingPrinter = null;
         let editingPoste = null;
@@ -410,19 +427,21 @@
         }
 
         function renderTables() {
-            document.getElementById('table-list').innerHTML = tables.map(t => `
+            document.getElementById('table-list').innerHTML = tables.map(t => {
+                const cols = (t.colonnes || []).map(c => c.nom).join(', ');
+                return `
                 <li class="item">
                     <div class="item-icon">📋</div>
                     <div class="item-info">
                         <div class="item-name">${t.nom}</div>
-                        <div class="item-detail">${t.id}</div>
+                        <div class="item-detail">${cols || t.id}</div>
                     </div>
                     <div class="item-actions">
-                        <button class="btn-icon" onclick="openValuesModal('${t.id}', '${t.nom}')">📝</button>
+                        <button class="btn-icon" onclick="openValuesModal('${t.id}')">📝</button>
                         <button class="btn-icon delete" onclick="deleteTable('${t.id}')">🗑️</button>
                     </div>
                 </li>
-            `).join('');
+            `}).join('');
         }
 
         function openTableModal() {
@@ -438,7 +457,8 @@
         async function saveTable() {
             const data = {
                 id: document.getElementById('table-id').value.trim(),
-                nom: document.getElementById('table-nom').value.trim()
+                nom: document.getElementById('table-nom').value.trim(),
+                colonnes: [{ id: 'valeur', nom: 'Valeur', type: 'text' }]
             };
             const res = await fetch('/api/tables', {
                 method: 'POST',
@@ -461,62 +481,107 @@
             document.getElementById('delete-modal').classList.add('show');
         }
 
-        // Valeurs
-        async function openValuesModal(tableId, tableName) {
-            currentTableId = tableId;
-            document.getElementById('values-modal-title').textContent = tableName;
+        // === Valeurs Table ===
+        async function openValuesModal(tableId) {
+            currentTable = tables.find(t => t.id === tableId);
+            if (!currentTable) return;
+            
+            document.getElementById('values-modal-title').textContent = currentTable.nom;
             await loadTableValues();
+            renderValuesTable();
             document.getElementById('values-modal').classList.add('show');
         }
 
         function closeValuesModal() {
             document.getElementById('values-modal').classList.remove('show');
-            currentTableId = null;
+            currentTable = null;
         }
 
         async function loadTableValues() {
-            const res = await fetch('/api/tables/' + currentTableId + '/values');
+            const res = await fetch('/api/tables/' + currentTable.id + '/values');
             currentTableValues = await res.json();
-            renderValues();
         }
 
-        function renderValues() {
-            document.getElementById('values-list').innerHTML = currentTableValues.map(v => `
-                <div class="value-item">
-                    <input type="text" value="${v.Valeur}" onchange="updateValue(${v.ID}, this.value, '${v.Description || ''}')">
-                    <input type="text" value="${v.Description || ''}" placeholder="Description" style="width:120px" onchange="updateValue(${v.ID}, '${v.Valeur}', this.value)">
-                    <button class="btn-icon delete" onclick="deleteValue(${v.ID})">🗑️</button>
-                </div>
-            `).join('') || '<p style="color:#86868b;text-align:center;padding:1rem;">Aucune valeur</p>';
+        function renderValuesTable() {
+            const colonnes = currentTable.colonnes || [{ id: 'valeur', nom: 'Valeur' }];
+            
+            // Header
+            document.getElementById('values-thead').innerHTML = `
+                <tr>
+                    ${colonnes.map(c => `<th>${c.nom}</th>`).join('')}
+                    <th style="width:40px"></th>
+                </tr>
+            `;
+            
+            // Body
+            document.getElementById('values-tbody').innerHTML = currentTableValues.map(row => `
+                <tr data-id="${row.ID}">
+                    ${colonnes.map(c => `
+                        <td><input type="${c.type || 'text'}" value="${row[c.nom] || ''}" data-col="${c.id}" onchange="updateRow(${row.ID})"></td>
+                    `).join('')}
+                    <td><button class="btn-icon delete" onclick="deleteRow(${row.ID})">🗑️</button></td>
+                </tr>
+            `).join('') || '<tr><td colspan="99" style="text-align:center;color:#86868b;padding:1rem;">Aucune valeur</td></tr>';
+            
+            // Add row
+            document.getElementById('add-row').innerHTML = `
+                ${colonnes.map(c => `<input type="${c.type || 'text'}" id="new-${c.id}" placeholder="${c.nom}">`).join('')}
+                <button class="btn" onclick="addRow()">+</button>
+            `;
         }
 
-        async function addValue() {
-            const valeur = document.getElementById('new-value').value.trim();
-            const description = document.getElementById('new-desc').value.trim();
-            if (!valeur) return;
-
-            await fetch('/api/tables/' + currentTableId + '/values', {
+        async function addRow() {
+            const colonnes = currentTable.colonnes || [];
+            const data = {};
+            let hasValue = false;
+            
+            colonnes.forEach(c => {
+                const input = document.getElementById('new-' + c.id);
+                if (input) {
+                    data[c.id] = input.value.trim();
+                    if (data[c.id]) hasValue = true;
+                }
+            });
+            
+            if (!hasValue) return;
+            
+            await fetch('/api/tables/' + currentTable.id + '/values', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ valeur, description })
+                body: JSON.stringify(data)
             });
-
-            document.getElementById('new-value').value = '';
-            document.getElementById('new-desc').value = '';
-            loadTableValues();
+            
+            // Clear inputs
+            colonnes.forEach(c => {
+                const input = document.getElementById('new-' + c.id);
+                if (input) input.value = '';
+            });
+            
+            await loadTableValues();
+            renderValuesTable();
         }
 
-        async function updateValue(id, valeur, description) {
-            await fetch('/api/tables/' + currentTableId + '/values/' + id, {
+        async function updateRow(rowId) {
+            const colonnes = currentTable.colonnes || [];
+            const row = document.querySelector(`tr[data-id="${rowId}"]`);
+            const data = {};
+            
+            colonnes.forEach(c => {
+                const input = row.querySelector(`input[data-col="${c.id}"]`);
+                if (input) data[c.id] = input.value;
+            });
+            
+            await fetch('/api/tables/' + currentTable.id + '/values/' + rowId, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ valeur, description, actif: 'oui' })
+                body: JSON.stringify(data)
             });
         }
 
-        async function deleteValue(id) {
-            await fetch('/api/tables/' + currentTableId + '/values/' + id, { method: 'DELETE' });
-            loadTableValues();
+        async function deleteRow(rowId) {
+            await fetch('/api/tables/' + currentTable.id + '/values/' + rowId, { method: 'DELETE' });
+            await loadTableValues();
+            renderValuesTable();
         }
 
         // === PRINTERS ===
