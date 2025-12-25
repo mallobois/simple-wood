@@ -3,269 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paramètres - MALLO BOIS</title>
+    <title>Paramètres - WoodStock</title>
     <style>
+        :root {
+            --bg: #f8f9fa; --card: #ffffff; --text: #1a1a2e; --text-muted: #6c757d;
+            --primary: #2563eb; --success: #059669; --danger: #dc2626; --border: #e5e7eb;
+            --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
-            min-height: 100vh;
-        }
-        header {
-            background: #fff;
-            border-bottom: 1px solid #e5e5e7;
-            padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        .back { color: #007aff; text-decoration: none; }
-        header h1 { font-size: 1.1rem; font-weight: 600; }
-        main { max-width: 700px; margin: 0 auto; padding: 1.5rem; }
-        .section {
-            background: #fff;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        .section h2 {
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #86868b;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100dvh; padding-bottom: 2rem; }
+        
+        header { background: var(--card); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; position: sticky; top: 0; z-index: 10; }
+        .back { color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+        header h1 { font-size: 1rem; font-weight: 600; }
+        
+        main { max-width: 700px; margin: 0 auto; padding: 1rem; }
+        
+        .toast { position: fixed; top: 4rem; left: 50%; transform: translateX(-50%) translateY(-20px); padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.9rem; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 100; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--danger); color: white; }
+        
+        .card { background: var(--card); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+        .card-title { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.75rem; }
+        
         .item-list { list-style: none; }
-        .item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #f0f0f0;
-            gap: 0.75rem;
-        }
+        .item { display: flex; align-items: center; padding: 0.625rem 0; border-bottom: 1px solid var(--bg); gap: 0.625rem; }
         .item:last-child { border-bottom: none; }
-        .item-icon {
-            width: 40px;
-            height: 40px;
-            background: #e5e5e7;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
+        .item-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
         .item-icon.round { border-radius: 50%; }
         .item-info { flex: 1; min-width: 0; }
-        .item-name { font-weight: 500; }
-        .item-detail { font-size: 0.8rem; color: #86868b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .item-badge {
-            font-size: 0.7rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            background: #e5e5e7;
-            flex-shrink: 0;
-        }
-        .item-badge.admin { background: #007aff; color: #fff; }
-        .item-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
-        .btn-icon {
-            width: 32px;
-            height: 32px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            background: #f5f5f7;
-            font-size: 1rem;
-        }
-        .btn-icon:hover { background: #e5e5e7; }
-        .btn-icon.delete:hover { background: #ff3b30; color: #fff; }
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            background: #007aff;
-            color: #fff;
-        }
-        .btn:hover { background: #0066d6; }
-        .btn.secondary { background: #e5e5e7; color: #1d1d1f; }
-        .btn.danger { background: #ff3b30; }
-        .btn.small { padding: 0.5rem 1rem; font-size: 0.85rem; }
-        .add-btn { width: 100%; padding: 1rem; margin-top: 1rem; }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 1rem;
-        }
+        .item-name { font-weight: 500; font-size: 0.9rem; }
+        .item-detail { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-badge { font-size: 0.65rem; padding: 0.2rem 0.4rem; border-radius: 4px; background: var(--bg); font-weight: 600; text-transform: uppercase; }
+        .item-badge.admin { background: var(--primary); color: white; }
+        .item-actions { display: flex; gap: 0.375rem; flex-shrink: 0; }
+        
+        .btn { padding: 0.5rem 0.875rem; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-icon { width: 30px; height: 30px; padding: 0; background: var(--bg); border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; }
+        .btn-icon:hover { background: var(--border); }
+        .btn-icon.delete:hover { background: var(--danger); color: white; }
+        .btn-full { width: 100%; padding: 0.75rem; margin-top: 0.75rem; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
         .modal.show { display: flex; }
-        .modal-content {
-            background: #fff;
-            border-radius: 16px;
-            padding: 1.5rem;
-            width: 100%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .modal-content.wide { max-width: 700px; }
-        .modal h3 { font-size: 1.1rem; margin-bottom: 1.5rem; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label {
-            display: block;
-            font-size: 0.8rem;
-            color: #86868b;
-            margin-bottom: 0.5rem;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #e5e5e7;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+        .modal-content { background: var(--card); border-radius: 16px; padding: 1.25rem; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+        .modal-content.wide { max-width: 640px; }
+        .modal h3 { font-size: 1.1rem; margin-bottom: 1.25rem; }
+        .modal-actions { display: flex; gap: 0.625rem; margin-top: 1.25rem; }
         .modal-actions .btn { flex: 1; }
-        .message {
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
-        }
-        .message.show { display: block; }
-        .message.success { background: #d4edda; color: #155724; }
-        .message.error { background: #f8d7da; color: #721c24; }
-        .postes-checkboxes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        .poste-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0.75rem;
-            background: #f5f5f7;
-            border-radius: 6px;
-        }
+        
+        .form-group { margin-bottom: 0.875rem; }
+        .form-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.375rem; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        
+        .postes-checkboxes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .poste-checkbox { display: flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.625rem; background: var(--bg); border-radius: 6px; font-size: 0.85rem; }
         .poste-checkbox input { width: 16px; height: 16px; }
         
-        /* Table values - responsive cards */
-        .values-list { margin-bottom: 1rem; }
-        .value-card {
-            background: #f9f9fb;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-        }
-        .value-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
-        .value-card-id {
-            font-size: 0.75rem;
-            color: #86868b;
-        }
-        .value-card-fields {
-            display: grid;
-            gap: 0.5rem;
-        }
-        .value-field {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-        .value-field label {
-            font-size: 0.7rem;
-            color: #86868b;
-            text-transform: uppercase;
-        }
-        .value-field input, .value-field select {
-            padding: 0.5rem;
-            border: 1px solid #e5e5e7;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-        .add-value-card {
-            background: #e8f4fd;
-            border: 2px dashed #007aff;
-            border-radius: 8px;
-            padding: 1rem;
-        }
-        .add-value-card h4 {
-            font-size: 0.8rem;
-            color: #007aff;
-            margin-bottom: 0.75rem;
-        }
-        .add-value-fields {
-            display: grid;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-        }
+        /* Table values */
+        .values-list { max-height: 50vh; overflow-y: auto; margin-bottom: 1rem; }
+        .value-card { background: var(--bg); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.5rem; }
+        .value-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .value-card-id { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+        .value-card-fields { display: grid; gap: 0.375rem; }
+        .value-field { display: flex; flex-direction: column; gap: 0.125rem; }
+        .value-field label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+        .value-field input, .value-field select { padding: 0.375rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
+        .add-value-card { background: #eff6ff; border: 2px dashed var(--primary); border-radius: 8px; padding: 0.75rem; }
+        .add-value-card h4 { font-size: 0.75rem; color: var(--primary); margin-bottom: 0.5rem; }
     </style>
 </head>
 <body>
     <header>
         <a href="/" class="back">← Accueil</a>
-        <h1>Paramètres généraux</h1>
+        <h1>Paramètres</h1>
     </header>
 
+    <div id="toast" class="toast"></div>
+
     <main>
-        <div id="message" class="message"></div>
-
-        <!-- TABLES -->
-        <div class="section">
-            <h2>Tables de référence</h2>
+        <!-- Tables -->
+        <div class="card">
+            <div class="card-title">📋 Tables de référence</div>
             <ul class="item-list" id="table-list"></ul>
-            <button class="btn add-btn" onclick="openTableModal()">+ Nouvelle table</button>
+            <button class="btn btn-primary btn-full" onclick="openTableModal()">+ Nouvelle table</button>
         </div>
 
-        <!-- POSTES -->
-        <div class="section">
-            <h2>Postes de travail</h2>
+        <!-- Postes -->
+        <div class="card">
+            <div class="card-title">📦 Postes de travail</div>
             <ul class="item-list" id="poste-list"></ul>
-            <button class="btn add-btn" onclick="openPosteModal()">+ Nouveau poste</button>
+            <button class="btn btn-primary btn-full" onclick="openPosteModal()">+ Nouveau poste</button>
         </div>
 
-        <!-- IMPRIMANTES -->
-        <div class="section">
-            <h2>Imprimantes Zebra (max 6)</h2>
+        <!-- Imprimantes -->
+        <div class="card">
+            <div class="card-title">🖨️ Imprimantes Zebra</div>
             <ul class="item-list" id="printer-list"></ul>
-            <button class="btn add-btn" onclick="openPrinterModal()">+ Nouvelle imprimante</button>
+            <button class="btn btn-primary btn-full" onclick="openPrinterModal()">+ Nouvelle imprimante</button>
         </div>
 
-        <!-- UTILISATEURS -->
-        <div class="section">
-            <h2>Utilisateurs</h2>
+        <!-- Utilisateurs -->
+        <div class="card">
+            <div class="card-title">👥 Utilisateurs</div>
             <ul class="item-list" id="user-list"></ul>
-            <button class="btn add-btn" onclick="openUserModal()">+ Nouvel utilisateur</button>
+            <button class="btn btn-primary btn-full" onclick="openUserModal()">+ Nouvel utilisateur</button>
         </div>
 
-        <!-- SYSTEME -->
-        <div class="section">
-            <h2>Système</h2>
-            <button class="btn secondary" onclick="updateApp()">Mettre à jour depuis GitHub</button>
+        <!-- Système -->
+        <div class="card">
+            <div class="card-title">⚙️ Système</div>
+            <button class="btn btn-secondary" onclick="updateApp()">Mettre à jour depuis GitHub</button>
         </div>
     </main>
 
-    <!-- Modal Valeurs Table -->
+    <!-- Modal Values -->
     <div class="modal" id="values-modal">
         <div class="modal-content wide">
             <h3 id="values-modal-title">Valeurs</h3>
             <div class="values-list" id="values-list"></div>
             <div class="add-value-card" id="add-value-card"></div>
             <div class="modal-actions">
-                <button class="btn secondary" onclick="closeValuesModal()">Fermer</button>
+                <button class="btn btn-secondary" onclick="closeValuesModal()">Fermer</button>
             </div>
         </div>
     </div>
@@ -273,20 +141,14 @@
     <!-- Modal Table -->
     <div class="modal" id="table-modal">
         <div class="modal-content">
-            <h3 id="table-modal-title">Nouvelle table</h3>
+            <h3>Nouvelle table</h3>
             <div class="form-row">
-                <div class="form-group">
-                    <label>ID</label>
-                    <input type="text" id="table-id" placeholder="essences">
-                </div>
-                <div class="form-group">
-                    <label>Nom</label>
-                    <input type="text" id="table-nom" placeholder="Essences">
-                </div>
+                <div class="form-group"><label>ID</label><input type="text" id="table-id" placeholder="essences"></div>
+                <div class="form-group"><label>Nom</label><input type="text" id="table-nom" placeholder="Essences"></div>
             </div>
             <div class="modal-actions">
-                <button class="btn secondary" onclick="closeTableModal()">Annuler</button>
-                <button class="btn" onclick="saveTable()">Créer</button>
+                <button class="btn btn-secondary" onclick="closeTableModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="saveTable()">Créer</button>
             </div>
         </div>
     </div>
@@ -296,136 +158,77 @@
         <div class="modal-content">
             <h3 id="poste-modal-title">Nouveau poste</h3>
             <div class="form-row">
-                <div class="form-group">
-                    <label>ID</label>
-                    <input type="text" id="poste-id" placeholder="troncons">
-                </div>
-                <div class="form-group">
-                    <label>Nom</label>
-                    <input type="text" id="poste-nom" placeholder="Tronçons">
-                </div>
+                <div class="form-group"><label>ID</label><input type="text" id="poste-id" placeholder="troncons"></div>
+                <div class="form-group"><label>Nom</label><input type="text" id="poste-nom" placeholder="Tronçons"></div>
             </div>
-            <div class="form-group">
-                <label>Description</label>
-                <input type="text" id="poste-desc" placeholder="Étiquetage des tronçons">
-            </div>
+            <div class="form-group"><label>Description</label><input type="text" id="poste-desc" placeholder="Étiquetage des tronçons"></div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>Série</label>
-                    <input type="text" id="poste-serie" value="2501">
-                </div>
-                <div class="form-group">
-                    <label>Préfixe</label>
-                    <input type="text" id="poste-prefixe" placeholder="TRO-">
-                </div>
+                <div class="form-group"><label>Série</label><input type="text" id="poste-serie" value="2501"></div>
+                <div class="form-group"><label>Préfixe</label><input type="text" id="poste-prefixe" placeholder="TRO-"></div>
             </div>
-            <div class="form-group">
-                <label>Imprimante</label>
-                <select id="poste-printer"></select>
-            </div>
+            <div class="form-group"><label>Imprimante</label><select id="poste-printer"></select></div>
             <div class="modal-actions">
-                <button class="btn secondary" onclick="closePosteModal()">Annuler</button>
-                <button class="btn" onclick="savePoste()">Enregistrer</button>
+                <button class="btn btn-secondary" onclick="closePosteModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="savePoste()">Enregistrer</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Imprimante -->
+    <!-- Modal Printer -->
     <div class="modal" id="printer-modal">
         <div class="modal-content">
             <h3 id="printer-modal-title">Nouvelle imprimante</h3>
             <div class="form-row">
-                <div class="form-group">
-                    <label>ID</label>
-                    <input type="text" id="printer-id" placeholder="zebra1">
-                </div>
-                <div class="form-group">
-                    <label>Nom</label>
-                    <input type="text" id="printer-nom" placeholder="Zebra Bureau">
-                </div>
+                <div class="form-group"><label>ID</label><input type="text" id="printer-id" placeholder="zebra1"></div>
+                <div class="form-group"><label>Nom</label><input type="text" id="printer-nom" placeholder="Zebra Bureau"></div>
             </div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>Adresse IP</label>
-                    <input type="text" id="printer-ip" placeholder="192.168.1.67">
-                </div>
-                <div class="form-group">
-                    <label>Port</label>
-                    <input type="number" id="printer-port" value="9100">
-                </div>
+                <div class="form-group"><label>Adresse IP</label><input type="text" id="printer-ip" placeholder="192.168.1.67"></div>
+                <div class="form-group"><label>Port</label><input type="number" id="printer-port" value="9100"></div>
             </div>
             <div class="modal-actions">
-                <button class="btn secondary" onclick="closePrinterModal()">Annuler</button>
-                <button class="btn" onclick="savePrinter()">Enregistrer</button>
+                <button class="btn btn-secondary" onclick="closePrinterModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="savePrinter()">Enregistrer</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Utilisateur -->
+    <!-- Modal User -->
     <div class="modal" id="user-modal">
         <div class="modal-content">
             <h3 id="user-modal-title">Nouvel utilisateur</h3>
-            <div class="form-group">
-                <label>Identifiant</label>
-                <input type="text" id="user-id" placeholder="jean">
-            </div>
-            <div class="form-group">
-                <label>Nom complet</label>
-                <input type="text" id="user-nom" placeholder="Jean Dupont">
-            </div>
+            <div class="form-group"><label>Identifiant</label><input type="text" id="user-id" placeholder="jean"></div>
+            <div class="form-group"><label>Nom complet</label><input type="text" id="user-nom" placeholder="Jean Dupont"></div>
             <div class="form-row">
-                <div class="form-group">
-                    <label>Initiales</label>
-                    <input type="text" id="user-initiales" placeholder="JD" maxlength="3">
-                </div>
-                <div class="form-group">
-                    <label>Droits</label>
-                    <select id="user-droits">
-                        <option value="operateur">Opérateur</option>
-                        <option value="admin">Administrateur</option>
-                    </select>
-                </div>
+                <div class="form-group"><label>Initiales</label><input type="text" id="user-initiales" placeholder="JD" maxlength="3"></div>
+                <div class="form-group"><label>Droits</label><select id="user-droits"><option value="operateur">Opérateur</option><option value="admin">Admin</option></select></div>
             </div>
-            <div class="form-group">
-                <label>Code PIN (6-8 chiffres)</label>
-                <input type="text" id="user-pin" placeholder="123456" maxlength="8" inputmode="numeric">
-            </div>
-            <div class="form-group">
-                <label>Postes autorisés (vide = tous)</label>
-                <div class="postes-checkboxes" id="user-postes"></div>
-            </div>
+            <div class="form-group"><label>Code PIN (6-8 chiffres)</label><input type="text" id="user-pin" placeholder="123456" maxlength="8" inputmode="numeric"></div>
+            <div class="form-group"><label>Postes autorisés</label><div class="postes-checkboxes" id="user-postes"></div></div>
             <div class="modal-actions">
-                <button class="btn secondary" onclick="closeUserModal()">Annuler</button>
-                <button class="btn" onclick="saveUser()">Enregistrer</button>
+                <button class="btn btn-secondary" onclick="closeUserModal()">Annuler</button>
+                <button class="btn btn-primary" onclick="saveUser()">Enregistrer</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Suppression -->
+    <!-- Modal Delete -->
     <div class="modal" id="delete-modal">
         <div class="modal-content">
             <h3>Confirmer la suppression ?</h3>
-            <p style="color:#86868b;margin-bottom:1.5rem;">Cette action est irréversible.</p>
+            <p style="color:var(--text-muted);margin-bottom:1rem;">Cette action est irréversible.</p>
             <div class="modal-actions">
-                <button class="btn secondary" onclick="closeDeleteModal()">Annuler</button>
-                <button class="btn danger" onclick="confirmDelete()">Supprimer</button>
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Annuler</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Supprimer</button>
             </div>
         </div>
     </div>
 
     <script>
-        let printers = [];
-        let postes = [];
-        let users = [];
-        let tables = [];
-        let currentTable = null;
-        let currentTableValues = [];
-        let refTableValues = {};
-        let editingPrinter = null;
-        let editingPoste = null;
-        let editingUser = null;
-        let deleteType = null;
-        let deleteId = null;
+        let printers=[], postes=[], users=[], tables=[];
+        let currentTable=null, currentTableValues=[], refTableValues={};
+        let editingPrinter=null, editingPoste=null, editingUser=null;
+        let deleteType=null, deleteId=null;
 
         document.addEventListener('DOMContentLoaded', loadAll);
 
@@ -435,212 +238,157 @@
 
         // === TABLES ===
         async function loadTables() {
-            const res = await fetch('/api/tables');
-            tables = await res.json();
-            renderTables();
-        }
-
-        function renderTables() {
-            document.getElementById('table-list').innerHTML = tables.map(t => {
-                const cols = (t.colonnes || []).map(c => c.nom).join(', ');
-                return `
+            tables = await (await fetch('/api/tables')).json();
+            document.getElementById('table-list').innerHTML = tables.map(t => `
                 <li class="item">
                     <div class="item-icon">📋</div>
                     <div class="item-info">
                         <div class="item-name">${t.nom}</div>
-                        <div class="item-detail">${cols || t.id}</div>
+                        <div class="item-detail">${(t.colonnes||[]).map(c=>c.nom).join(', ')}</div>
                     </div>
                     <div class="item-actions">
                         <button class="btn-icon" onclick="openValuesModal('${t.id}')">📝</button>
-                        <button class="btn-icon delete" onclick="deleteTable('${t.id}')">🗑️</button>
+                        <button class="btn-icon delete" onclick="deleteItem('table','${t.id}')">🗑️</button>
                     </div>
                 </li>
-            `}).join('');
+            `).join('');
         }
 
-        function openTableModal() {
+        function openTableModal() { 
             document.getElementById('table-id').value = '';
             document.getElementById('table-nom').value = '';
-            document.getElementById('table-modal').classList.add('show');
+            document.getElementById('table-modal').classList.add('show'); 
         }
-
-        function closeTableModal() {
-            document.getElementById('table-modal').classList.remove('show');
-        }
+        function closeTableModal() { document.getElementById('table-modal').classList.remove('show'); }
 
         async function saveTable() {
-            const data = {
-                id: document.getElementById('table-id').value.trim(),
-                nom: document.getElementById('table-nom').value.trim(),
-                colonnes: [{ id: 'valeur', nom: 'Valeur', type: 'text' }]
-            };
             const res = await fetch('/api/tables', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    id: document.getElementById('table-id').value.trim(),
+                    nom: document.getElementById('table-nom').value.trim(),
+                    colonnes: [{id:'valeur', nom:'Valeur', type:'text'}]
+                })
             });
-            const result = await res.json();
-            if (result.success) {
-                showMessage('Table créée', 'success');
-                closeTableModal();
-                loadTables();
-            } else {
-                showMessage(result.message, 'error');
-            }
+            const r = await res.json();
+            if (r.success) { showToast('Table créée','success'); closeTableModal(); loadTables(); }
+            else showToast(r.message,'error');
         }
 
-        function deleteTable(id) {
-            deleteType = 'table';
-            deleteId = id;
-            document.getElementById('delete-modal').classList.add('show');
-        }
-
-        // === Valeurs Table ===
+        // === VALUES ===
         async function openValuesModal(tableId) {
             currentTable = tables.find(t => t.id === tableId);
             if (!currentTable) return;
-            
             document.getElementById('values-modal-title').textContent = currentTable.nom;
             
-            // Charger les valeurs des tables référencées
             refTableValues = {};
             for (const col of (currentTable.colonnes || [])) {
                 if (col.type === 'ref' && col.ref_table) {
-                    const res = await fetch('/api/tables/' + col.ref_table + '/values');
-                    refTableValues[col.ref_table] = await res.json();
+                    refTableValues[col.ref_table] = await (await fetch('/api/tables/' + col.ref_table + '/values')).json();
                 }
             }
             
-            await loadTableValues();
+            currentTableValues = await (await fetch('/api/tables/' + currentTable.id + '/values')).json();
             renderValuesCards();
             document.getElementById('values-modal').classList.add('show');
         }
-
-        function closeValuesModal() {
-            document.getElementById('values-modal').classList.remove('show');
-            currentTable = null;
-        }
-
-        async function loadTableValues() {
-            const res = await fetch('/api/tables/' + currentTable.id + '/values');
-            currentTableValues = await res.json();
-        }
+        function closeValuesModal() { document.getElementById('values-modal').classList.remove('show'); currentTable = null; }
 
         function renderValuesCards() {
-            const colonnes = currentTable.colonnes || [{ id: 'valeur', nom: 'Valeur', type: 'text' }];
+            const cols = currentTable.colonnes || [{id:'valeur', nom:'Valeur', type:'text'}];
             
-            // Liste des valeurs existantes
             document.getElementById('values-list').innerHTML = currentTableValues.map(row => `
                 <div class="value-card" data-id="${row.ID}">
                     <div class="value-card-header">
                         <span class="value-card-id">#${row.ID}</span>
                         <button class="btn-icon delete" onclick="deleteRow(${row.ID})">🗑️</button>
                     </div>
-                    <div class="value-card-fields">
-                        ${colonnes.map(c => `
+                    <div class="value-card-fields" style="grid-template-columns: repeat(${Math.min(cols.length, 3)}, 1fr);">
+                        ${cols.map(c => `
                             <div class="value-field">
                                 <label>${c.nom}</label>
-                                ${renderFieldInput(c, row[c.nom] || '', row.ID)}
+                                ${renderInput(c, row[c.nom] || '', row.ID)}
                             </div>
                         `).join('')}
                     </div>
                 </div>
-            `).join('') || '<p style="color:#86868b;text-align:center;padding:1rem;">Aucune valeur</p>';
+            `).join('') || '<p style="color:var(--text-muted);text-align:center;padding:1rem;">Aucune valeur</p>';
             
-            // Formulaire d'ajout
             document.getElementById('add-value-card').innerHTML = `
                 <h4>+ Ajouter</h4>
-                <div class="add-value-fields">
-                    ${colonnes.map(c => `
+                <div class="value-card-fields" style="grid-template-columns: repeat(${Math.min(cols.length, 3)}, 1fr); margin-bottom:0.5rem;">
+                    ${cols.map(c => `
                         <div class="value-field">
                             <label>${c.nom}</label>
-                            ${renderFieldInput(c, '', 'new')}
+                            ${renderInput(c, '', 'new')}
                         </div>
                     `).join('')}
                 </div>
-                <button class="btn small" onclick="addRow()">Ajouter</button>
+                <button class="btn btn-primary" onclick="addRow()">Ajouter</button>
             `;
         }
 
-        function renderFieldInput(col, value, rowId) {
-            const inputId = `field-${rowId}-${col.id}`;
-            
+        function renderInput(col, value, rowId) {
+            const id = `field-${rowId}-${col.id}`;
             if (col.type === 'ref' && col.ref_table) {
-                const refValues = refTableValues[col.ref_table] || [];
+                const refs = refTableValues[col.ref_table] || [];
                 const refCol = col.ref_col || 'nom';
-                const options = refValues.map(r => {
-                    const optValue = r[refCol] || r['Nom'] || r['Valeur'] || '';
-                    const selected = optValue === value ? 'selected' : '';
-                    return `<option value="${optValue}" ${selected}>${optValue}</option>`;
-                }).join('');
-                return `<select id="${inputId}" data-col="${col.id}" onchange="updateRow(${rowId})">
-                    <option value="">-- Choisir --</option>
-                    ${options}
+                return `<select id="${id}" data-col="${col.id}" onchange="updateRow(${rowId})">
+                    <option value="">—</option>
+                    ${refs.map(r => {
+                        const v = r[refCol] || r['Nom'] || r['Valeur'] || '';
+                        return `<option value="${v}" ${v===value?'selected':''}>${v}</option>`;
+                    }).join('')}
                 </select>`;
             }
-            
-            const inputType = col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text';
-            return `<input type="${inputType}" id="${inputId}" data-col="${col.id}" value="${value}" onchange="updateRow(${rowId})">`;
+            const type = col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text';
+            return `<input type="${type}" id="${id}" data-col="${col.id}" value="${value}" onchange="updateRow(${rowId})">`;
         }
 
         async function addRow() {
-            const colonnes = currentTable.colonnes || [];
+            const cols = currentTable.colonnes || [];
             const data = {};
             let hasValue = false;
-            
-            colonnes.forEach(c => {
-                const input = document.getElementById('field-new-' + c.id);
-                if (input) {
-                    data[c.id] = input.value.trim();
-                    if (data[c.id]) hasValue = true;
-                }
+            cols.forEach(c => {
+                const el = document.getElementById('field-new-' + c.id);
+                if (el) { data[c.id] = el.value.trim(); if (data[c.id]) hasValue = true; }
             });
-            
             if (!hasValue) return;
-            
             await fetch('/api/tables/' + currentTable.id + '/values', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type':'application/json'},
                 body: JSON.stringify(data)
             });
-            
-            await loadTableValues();
+            currentTableValues = await (await fetch('/api/tables/' + currentTable.id + '/values')).json();
             renderValuesCards();
         }
 
         async function updateRow(rowId) {
             if (rowId === 'new') return;
-            
-            const colonnes = currentTable.colonnes || [];
+            const cols = currentTable.colonnes || [];
             const card = document.querySelector(`.value-card[data-id="${rowId}"]`);
             const data = {};
-            
-            colonnes.forEach(c => {
-                const input = card.querySelector(`[data-col="${c.id}"]`);
-                if (input) data[c.id] = input.value;
+            cols.forEach(c => {
+                const el = card.querySelector(`[data-col="${c.id}"]`);
+                if (el) data[c.id] = el.value;
             });
-            
             await fetch('/api/tables/' + currentTable.id + '/values/' + rowId, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type':'application/json'},
                 body: JSON.stringify(data)
             });
         }
 
         async function deleteRow(rowId) {
             await fetch('/api/tables/' + currentTable.id + '/values/' + rowId, { method: 'DELETE' });
-            await loadTableValues();
+            currentTableValues = await (await fetch('/api/tables/' + currentTable.id + '/values')).json();
             renderValuesCards();
         }
 
         // === PRINTERS ===
         async function loadPrinters() {
-            const res = await fetch('/api/printers');
-            printers = await res.json();
-            renderPrinters();
-        }
-
-        function renderPrinters() {
+            printers = await (await fetch('/api/printers')).json();
             document.getElementById('printer-list').innerHTML = printers.map(p => `
                 <li class="item">
                     <div class="item-icon">🖨️</div>
@@ -651,143 +399,25 @@
                     <div class="item-actions">
                         <button class="btn-icon" onclick="testPrinter('${p.id}')">🔌</button>
                         <button class="btn-icon" onclick="editPrinter('${p.id}')">✏️</button>
-                        <button class="btn-icon delete" onclick="deletePrinter('${p.id}')">🗑️</button>
+                        <button class="btn-icon delete" onclick="deleteItem('printer','${p.id}')">🗑️</button>
                     </div>
                 </li>
             `).join('');
         }
 
-        // === POSTES ===
-        async function loadPostes() {
-            const res = await fetch('/api/postes');
-            postes = await res.json();
-            renderPostes();
-        }
-
-        function renderPostes() {
-            document.getElementById('poste-list').innerHTML = postes.map(p => `
-                <li class="item">
-                    <div class="item-icon">📦</div>
-                    <div class="item-info">
-                        <div class="item-name">${p.nom}</div>
-                        <div class="item-detail">${p.description || p.id}</div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-icon" onclick="editPoste('${p.id}')">✏️</button>
-                        <button class="btn-icon delete" onclick="deletePoste('${p.id}')">🗑️</button>
-                    </div>
-                </li>
-            `).join('');
-            updatePrinterSelects();
-        }
-
-        // === USERS ===
-        async function loadUsers() {
-            const res = await fetch('/api/users/full');
-            users = await res.json();
-            renderUsers();
-        }
-
-        function renderUsers() {
-            document.getElementById('user-list').innerHTML = users.map(u => `
-                <li class="item">
-                    <div class="item-icon round">${u.initiales}</div>
-                    <div class="item-info">
-                        <div class="item-name">${u.nom}</div>
-                        <div class="item-detail">${u.id}</div>
-                    </div>
-                    <span class="item-badge ${u.droits}">${u.droits}</span>
-                    <div class="item-actions">
-                        <button class="btn-icon" onclick="editUser('${u.id}')">✏️</button>
-                        <button class="btn-icon delete" onclick="deleteUser('${u.id}')">🗑️</button>
-                    </div>
-                </li>
-            `).join('');
-        }
-
-        function updatePrinterSelects() {
-            const opts = printers.map(p => `<option value="${p.id}">${p.nom}</option>`).join('');
-            document.getElementById('poste-printer').innerHTML = opts;
-        }
-
-        // === MODALS POSTES ===
-        function openPosteModal(id = null) {
-            editingPoste = id;
-            updatePrinterSelects();
-            if (id) {
-                const p = postes.find(x => x.id === id);
-                document.getElementById('poste-modal-title').textContent = 'Modifier le poste';
-                document.getElementById('poste-id').value = p.id;
-                document.getElementById('poste-id').disabled = true;
-                document.getElementById('poste-nom').value = p.nom;
-                document.getElementById('poste-desc').value = p.description || '';
-                document.getElementById('poste-serie').value = p.serie;
-                document.getElementById('poste-prefixe').value = p.prefixe || '';
-                document.getElementById('poste-printer').value = p.printer;
-            } else {
-                document.getElementById('poste-modal-title').textContent = 'Nouveau poste';
-                document.getElementById('poste-id').value = '';
-                document.getElementById('poste-id').disabled = false;
-                document.getElementById('poste-nom').value = '';
-                document.getElementById('poste-desc').value = '';
-                document.getElementById('poste-serie').value = '2501';
-                document.getElementById('poste-prefixe').value = '';
-            }
-            document.getElementById('poste-modal').classList.add('show');
-        }
-        function closePosteModal() { document.getElementById('poste-modal').classList.remove('show'); editingPoste = null; }
-        function editPoste(id) { openPosteModal(id); }
-        function deletePoste(id) { deleteType = 'poste'; deleteId = id; document.getElementById('delete-modal').classList.add('show'); }
-
-        async function savePoste() {
-            const data = {
-                id: document.getElementById('poste-id').value.trim(),
-                nom: document.getElementById('poste-nom').value.trim(),
-                description: document.getElementById('poste-desc').value.trim(),
-                serie: document.getElementById('poste-serie').value.trim(),
-                prefixe: document.getElementById('poste-prefixe').value.trim(),
-                printer: document.getElementById('poste-printer').value
-            };
-            const url = editingPoste ? '/api/postes/' + editingPoste : '/api/postes';
-            const res = await fetch(url, {
-                method: editingPoste ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            const result = await res.json();
-            if (result.success) {
-                showMessage('Poste enregistré', 'success');
-                closePosteModal();
-                loadPostes();
-            } else {
-                showMessage(result.message, 'error');
-            }
-        }
-
-        // === MODALS IMPRIMANTES ===
-        function openPrinterModal(id = null) {
+        function openPrinterModal(id=null) {
             editingPrinter = id;
-            if (id) {
-                const p = printers.find(x => x.id === id);
-                document.getElementById('printer-modal-title').textContent = 'Modifier l\'imprimante';
-                document.getElementById('printer-id').value = p.id;
-                document.getElementById('printer-id').disabled = true;
-                document.getElementById('printer-nom').value = p.nom;
-                document.getElementById('printer-ip').value = p.ip;
-                document.getElementById('printer-port').value = p.port;
-            } else {
-                document.getElementById('printer-modal-title').textContent = 'Nouvelle imprimante';
-                document.getElementById('printer-id').value = '';
-                document.getElementById('printer-id').disabled = false;
-                document.getElementById('printer-nom').value = '';
-                document.getElementById('printer-ip').value = '';
-                document.getElementById('printer-port').value = '9100';
-            }
+            const p = id ? printers.find(x => x.id === id) : null;
+            document.getElementById('printer-modal-title').textContent = id ? 'Modifier imprimante' : 'Nouvelle imprimante';
+            document.getElementById('printer-id').value = p?.id || '';
+            document.getElementById('printer-id').disabled = !!id;
+            document.getElementById('printer-nom').value = p?.nom || '';
+            document.getElementById('printer-ip').value = p?.ip || '';
+            document.getElementById('printer-port').value = p?.port || 9100;
             document.getElementById('printer-modal').classList.add('show');
         }
         function closePrinterModal() { document.getElementById('printer-modal').classList.remove('show'); editingPrinter = null; }
         function editPrinter(id) { openPrinterModal(id); }
-        function deletePrinter(id) { deleteType = 'printer'; deleteId = id; document.getElementById('delete-modal').classList.add('show'); }
 
         async function savePrinter() {
             const data = {
@@ -798,72 +428,123 @@
             };
             const res = await fetch('/api/printers', {
                 method: editingPrinter ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type':'application/json'},
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
-            if (result.success) {
-                showMessage('Imprimante enregistrée', 'success');
-                closePrinterModal();
-                loadPrinters();
-            } else {
-                showMessage(result.message, 'error');
-            }
+            const r = await res.json();
+            if (r.success) { showToast('Imprimante enregistrée','success'); closePrinterModal(); loadPrinters(); }
+            else showToast(r.message,'error');
         }
 
         async function testPrinter(id) {
-            const res = await fetch('/api/printers/' + id + '/test', { method: 'POST' });
-            const result = await res.json();
-            showMessage(result.success ? 'Test OK' : result.message, result.success ? 'success' : 'error');
+            const r = await (await fetch('/api/printers/' + id + '/test', { method: 'POST' })).json();
+            showToast(r.success ? 'Test OK' : r.message, r.success ? 'success' : 'error');
         }
 
-        // === MODALS UTILISATEURS ===
-        function openUserModal(id = null) {
+        // === POSTES ===
+        async function loadPostes() {
+            postes = await (await fetch('/api/postes')).json();
+            document.getElementById('poste-list').innerHTML = postes.map(p => `
+                <li class="item">
+                    <div class="item-icon">📦</div>
+                    <div class="item-info">
+                        <div class="item-name">${p.nom}</div>
+                        <div class="item-detail">${p.description || p.id}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn-icon" onclick="editPoste('${p.id}')">✏️</button>
+                        <button class="btn-icon delete" onclick="deleteItem('poste','${p.id}')">🗑️</button>
+                    </div>
+                </li>
+            `).join('');
+            updatePrinterSelects();
+        }
+
+        function updatePrinterSelects() {
+            document.getElementById('poste-printer').innerHTML = printers.map(p => `<option value="${p.id}">${p.nom}</option>`).join('');
+        }
+
+        function openPosteModal(id=null) {
+            editingPoste = id;
+            updatePrinterSelects();
+            const p = id ? postes.find(x => x.id === id) : null;
+            document.getElementById('poste-modal-title').textContent = id ? 'Modifier poste' : 'Nouveau poste';
+            document.getElementById('poste-id').value = p?.id || '';
+            document.getElementById('poste-id').disabled = !!id;
+            document.getElementById('poste-nom').value = p?.nom || '';
+            document.getElementById('poste-desc').value = p?.description || '';
+            document.getElementById('poste-serie').value = p?.serie || '2501';
+            document.getElementById('poste-prefixe').value = p?.prefixe || '';
+            if (p?.printer) document.getElementById('poste-printer').value = p.printer;
+            document.getElementById('poste-modal').classList.add('show');
+        }
+        function closePosteModal() { document.getElementById('poste-modal').classList.remove('show'); editingPoste = null; }
+        function editPoste(id) { openPosteModal(id); }
+
+        async function savePoste() {
+            const data = {
+                id: document.getElementById('poste-id').value.trim(),
+                nom: document.getElementById('poste-nom').value.trim(),
+                description: document.getElementById('poste-desc').value.trim(),
+                serie: document.getElementById('poste-serie').value.trim(),
+                prefixe: document.getElementById('poste-prefixe').value.trim(),
+                printer: document.getElementById('poste-printer').value
+            };
+            const res = await fetch(editingPoste ? '/api/postes/' + editingPoste : '/api/postes', {
+                method: editingPoste ? 'PUT' : 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(data)
+            });
+            const r = await res.json();
+            if (r.success) { showToast('Poste enregistré','success'); closePosteModal(); loadPostes(); }
+            else showToast(r.message,'error');
+        }
+
+        // === USERS ===
+        async function loadUsers() {
+            users = await (await fetch('/api/users/full')).json();
+            document.getElementById('user-list').innerHTML = users.map(u => `
+                <li class="item">
+                    <div class="item-icon round">${u.initiales}</div>
+                    <div class="item-info">
+                        <div class="item-name">${u.nom}</div>
+                        <div class="item-detail">${u.id}</div>
+                    </div>
+                    <span class="item-badge ${u.droits}">${u.droits}</span>
+                    <div class="item-actions">
+                        <button class="btn-icon" onclick="editUser('${u.id}')">✏️</button>
+                        <button class="btn-icon delete" onclick="deleteItem('user','${u.id}')">🗑️</button>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function openUserModal(id=null) {
             editingUser = id;
+            const u = id ? users.find(x => x.id === id) : null;
+            
             document.getElementById('user-postes').innerHTML = postes.map(p => `
                 <label class="poste-checkbox">
-                    <input type="checkbox" value="${p.id}" id="up-${p.id}">
+                    <input type="checkbox" value="${p.id}" id="up-${p.id}" ${u?.postes?.includes(p.id)?'checked':''}>
                     ${p.nom}
                 </label>
             `).join('');
-
-            if (id) {
-                const u = users.find(x => x.id === id);
-                document.getElementById('user-modal-title').textContent = 'Modifier l\'utilisateur';
-                document.getElementById('user-id').value = u.id;
-                document.getElementById('user-id').disabled = true;
-                document.getElementById('user-nom').value = u.nom;
-                document.getElementById('user-initiales').value = u.initiales;
-                document.getElementById('user-droits').value = u.droits;
-                document.getElementById('user-pin').value = '';
-                document.getElementById('user-pin').placeholder = 'Laisser vide pour garder';
-                (u.postes || []).forEach(pid => {
-                    const cb = document.getElementById('up-' + pid);
-                    if (cb) cb.checked = true;
-                });
-            } else {
-                document.getElementById('user-modal-title').textContent = 'Nouvel utilisateur';
-                document.getElementById('user-id').value = '';
-                document.getElementById('user-id').disabled = false;
-                document.getElementById('user-nom').value = '';
-                document.getElementById('user-initiales').value = '';
-                document.getElementById('user-droits').value = 'operateur';
-                document.getElementById('user-pin').value = '';
-                document.getElementById('user-pin').placeholder = '123456';
-            }
+            
+            document.getElementById('user-modal-title').textContent = id ? 'Modifier utilisateur' : 'Nouvel utilisateur';
+            document.getElementById('user-id').value = u?.id || '';
+            document.getElementById('user-id').disabled = !!id;
+            document.getElementById('user-nom').value = u?.nom || '';
+            document.getElementById('user-initiales').value = u?.initiales || '';
+            document.getElementById('user-droits').value = u?.droits || 'operateur';
+            document.getElementById('user-pin').value = '';
+            document.getElementById('user-pin').placeholder = id ? 'Laisser vide pour garder' : '123456';
             document.getElementById('user-modal').classList.add('show');
         }
         function closeUserModal() { document.getElementById('user-modal').classList.remove('show'); editingUser = null; }
         function editUser(id) { openUserModal(id); }
-        function deleteUser(id) { deleteType = 'user'; deleteId = id; document.getElementById('delete-modal').classList.add('show'); }
 
         async function saveUser() {
-            const selectedPostes = [];
-            postes.forEach(p => {
-                const cb = document.getElementById('up-' + p.id);
-                if (cb && cb.checked) selectedPostes.push(p.id);
-            });
-
+            const selectedPostes = postes.filter(p => document.getElementById('up-' + p.id)?.checked).map(p => p.id);
             const data = {
                 id: document.getElementById('user-id').value.trim(),
                 nom: document.getElementById('user-nom').value.trim(),
@@ -874,53 +555,45 @@
             };
             const res = await fetch('/api/users', {
                 method: editingUser ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type':'application/json'},
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
-            if (result.success) {
-                showMessage('Utilisateur enregistré', 'success');
-                closeUserModal();
-                loadUsers();
-            } else {
-                showMessage(result.message, 'error');
-            }
+            const r = await res.json();
+            if (r.success) { showToast('Utilisateur enregistré','success'); closeUserModal(); loadUsers(); }
+            else showToast(r.message,'error');
         }
 
-        // === SUPPRESSION ===
+        // === DELETE ===
+        function deleteItem(type, id) {
+            deleteType = type;
+            deleteId = id;
+            document.getElementById('delete-modal').classList.add('show');
+        }
         function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('show'); }
-        async function confirmDelete() {
-            let url;
-            if (deleteType === 'printer') url = '/api/printers/' + deleteId;
-            else if (deleteType === 'poste') url = '/api/postes/' + deleteId;
-            else if (deleteType === 'table') url = '/api/tables/' + deleteId;
-            else url = '/api/users/' + deleteId;
 
-            const res = await fetch(url, { method: 'DELETE' });
-            const result = await res.json();
-            if (result.success) {
-                showMessage('Supprimé', 'success');
+        async function confirmDelete() {
+            const urls = { printer: '/api/printers/', poste: '/api/postes/', table: '/api/tables/', user: '/api/users/' };
+            const r = await (await fetch(urls[deleteType] + deleteId, { method: 'DELETE' })).json();
+            if (r.success) {
+                showToast('Supprimé','success');
                 if (deleteType === 'printer') loadPrinters();
                 else if (deleteType === 'poste') loadPostes();
                 else if (deleteType === 'table') loadTables();
                 else loadUsers();
-            } else {
-                showMessage(result.message, 'error');
-            }
+            } else showToast(r.message,'error');
             closeDeleteModal();
         }
 
         async function updateApp() {
-            const res = await fetch('/api/update', { method: 'POST' });
-            const result = await res.json();
-            showMessage(result.message, result.success ? 'success' : 'error');
+            const r = await (await fetch('/api/update', { method: 'POST' })).json();
+            showToast(r.message, r.success ? 'success' : 'error');
         }
 
-        function showMessage(text, type) {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.className = 'message show ' + type;
-            setTimeout(() => msg.classList.remove('show'), 3000);
+        function showToast(text, type) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.className = 'toast show ' + type;
+            setTimeout(() => t.classList.remove('show'), 2500);
         }
     </script>
 </body>

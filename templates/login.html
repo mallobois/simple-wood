@@ -3,226 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Connexion - MALLO BOIS</title>
+    <title>Connexion - WoodStock</title>
     <style>
+        :root {
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #1a1a2e;
+            --text-muted: #6c757d;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #059669;
+            --danger: #dc2626;
+            --border: #e5e7eb;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 1rem;
+            padding: 1.5rem;
         }
-
         .logo {
             text-align: center;
-            margin: 1rem 0;
+            margin: 1rem 0 2rem;
         }
-
-        .logo img {
-            height: 60px;
-            margin-bottom: 0.5rem;
-        }
-
-        .logo p {
-            color: #86868b;
-            font-size: 0.8rem;
-        }
-
+        .logo img { height: 48px; margin-bottom: 0.5rem; }
+        .logo h1 { font-size: 1.25rem; font-weight: 600; }
+        .logo p { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem; }
+        
         .users-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1rem;
-            margin: 1.5rem 0;
-            max-width: 400px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 0.75rem;
+            width: 100%;
+            max-width: 360px;
+            margin-bottom: 1.5rem;
         }
-
         .user-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 0.5rem;
-            padding: 1rem;
-            background: #fff;
-            border: 2px solid #e5e5e7;
-            border-radius: 16px;
+            padding: 1rem 0.5rem;
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
             cursor: pointer;
-            transition: all 0.2s;
-            min-width: 100px;
+            transition: all 0.15s;
         }
-
-        .user-btn:hover {
-            border-color: #007aff;
-            background: #f0f7ff;
+        .user-btn:hover, .user-btn:focus {
+            border-color: var(--primary);
+            background: #eff6ff;
         }
-
+        .user-btn:active { transform: scale(0.97); }
         .user-icon {
-            width: 56px;
-            height: 56px;
-            background: #e5e5e7;
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 600;
-            color: #1d1d1f;
+            color: white;
         }
-
         .user-name {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
+            text-align: center;
         }
-
+        
         .pin-section {
             display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            max-width: 300px;
+            max-width: 320px;
         }
-
-        .pin-section.show {
-            display: flex;
-        }
-
+        .pin-section.show { display: flex; }
+        
         .selected-user {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            padding: 0.75rem 1.25rem;
-            background: #fff;
-            border-radius: 12px;
             width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--card);
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
         }
-
-        .selected-user .user-icon {
-            width: 44px;
-            height: 44px;
-            font-size: 1.1rem;
-        }
-
-        .selected-user .user-name {
-            font-size: 1rem;
-        }
-
+        .selected-user .user-icon { width: 40px; height: 40px; font-size: 1rem; }
+        .selected-user .user-name { flex: 1; font-size: 0.95rem; }
         .change-user {
-            margin-left: auto;
-            color: #007aff;
+            color: var(--primary);
             font-size: 0.85rem;
             cursor: pointer;
+            font-weight: 500;
         }
-
+        
         .pin-display {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.625rem;
             margin-bottom: 1.5rem;
         }
-
         .pin-dot {
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            background: #d2d2d7;
-            transition: all 0.15s;
+            background: var(--border);
+            transition: all 0.12s;
         }
-
-        .pin-dot.filled {
-            background: #1d1d1f;
+        .pin-dot.filled { background: var(--text); transform: scale(1.1); }
+        .pin-dot.error { background: var(--danger); animation: shake 0.4s; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
-
-        .pin-dot.error {
-            background: #ff3b30;
-        }
-
+        
         .numpad {
             display: grid;
-            grid-template-columns: repeat(3, 80px);
-            gap: 0.6rem;
+            grid-template-columns: repeat(3, 72px);
+            gap: 0.5rem;
         }
-
         .num-btn {
-            height: 60px;
-            font-size: 1.75rem;
-            font-weight: 400;
-            background: #fff;
-            border: none;
-            border-radius: 12px;
+            height: 56px;
+            font-size: 1.5rem;
+            font-weight: 500;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
-        .num-btn:hover {
-            background: #e5e5e7;
-        }
-
-        .num-btn:active {
-            background: #d2d2d7;
-            transform: scale(0.95);
-        }
-
+        .num-btn:hover { background: #f3f4f6; }
+        .num-btn:active { background: #e5e7eb; transform: scale(0.96); }
         .num-btn.action {
             background: transparent;
+            border: none;
             font-size: 1.25rem;
-            color: #86868b;
+            color: var(--text-muted);
         }
-
         .num-btn.ok {
-            background: #34c759;
-            color: #fff;
-            font-size: 1.1rem;
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+            font-size: 1rem;
             font-weight: 600;
         }
-
-        .num-btn.ok:hover {
-            background: #2db350;
-        }
-
+        .num-btn.ok:hover { background: #047857; }
         .num-btn.ok:disabled {
-            background: #d2d2d7;
-            color: #fff;
+            background: var(--border);
+            border-color: var(--border);
             cursor: not-allowed;
         }
-
-        .message {
-            padding: 0.75rem 1rem;
+        
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--danger);
+            color: white;
+            padding: 0.75rem 1.5rem;
             border-radius: 8px;
-            margin-bottom: 1rem;
-            font-size: 0.85rem;
-            text-align: center;
-            background: #f8d7da;
-            color: #721c24;
-            display: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 100;
         }
-
-        .message.show {
-            display: block;
-        }
-
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        
         footer {
             margin-top: auto;
-            padding: 1rem;
-            color: #86868b;
-            font-size: 0.7rem;
+            padding-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="logo">
         <img src="https://www.mallobois.com/web/image/3942-71d600ce/Mallo%20logo.webp" alt="MALLO BOIS">
-        <p>WoodStock by Happy*Business</p>
+        <h1>WoodStock</h1>
+        <p>Système d'étiquetage</p>
     </div>
 
-    <div id="message" class="message"></div>
+    <div id="toast" class="toast"></div>
 
     <div id="user-select" class="users-grid"></div>
 
@@ -251,16 +232,13 @@
         </div>
     </div>
 
-    <footer>
-        Fort comme un industriel, agile comme un artisan
-    </footer>
+    <footer>Fort comme un industriel, agile comme un artisan</footer>
 
     <script>
         let users = [];
         let selectedUser = null;
         let pin = '';
-        const MIN_PIN = 6;
-        const MAX_PIN = 8;
+        const MIN_PIN = 6, MAX_PIN = 8;
 
         document.addEventListener('DOMContentLoaded', loadUsers);
 
@@ -270,17 +248,16 @@
                 users = await res.json();
                 renderUsers();
             } catch (e) {
-                showMessage('Erreur chargement utilisateurs');
+                showToast('Erreur chargement');
             }
         }
 
         function renderUsers() {
-            const grid = document.getElementById('user-select');
-            grid.innerHTML = users.map(u => `
-                <div class="user-btn" onclick="selectUser('${u.id}')">
+            document.getElementById('user-select').innerHTML = users.map(u => `
+                <button class="user-btn" onclick="selectUser('${u.id}')">
                     <div class="user-icon">${u.initiales}</div>
                     <span class="user-name">${u.nom}</span>
-                </div>
+                </button>
             `).join('');
         }
 
@@ -290,7 +267,6 @@
 
             document.getElementById('selected-icon').textContent = selectedUser.initiales;
             document.getElementById('selected-name').textContent = selectedUser.nom;
-            
             document.getElementById('user-select').style.display = 'none';
             document.getElementById('pin-section').classList.add('show');
             
@@ -299,21 +275,18 @@
         }
 
         function backToUsers() {
-            document.getElementById('user-select').style.display = 'flex';
+            document.getElementById('user-select').style.display = 'grid';
             document.getElementById('pin-section').classList.remove('show');
             selectedUser = null;
             pin = '';
         }
 
         function updatePinDisplay() {
-            const display = document.getElementById('pin-display');
-            let dots = '';
+            let html = '';
             for (let i = 0; i < MAX_PIN; i++) {
-                const filled = i < pin.length ? 'filled' : '';
-                dots += `<div class="pin-dot ${filled}"></div>`;
+                html += `<div class="pin-dot ${i < pin.length ? 'filled' : ''}"></div>`;
             }
-            display.innerHTML = dots;
-            
+            document.getElementById('pin-display').innerHTML = html;
             document.getElementById('btn-ok').disabled = pin.length < MIN_PIN;
         }
 
@@ -321,6 +294,7 @@
             if (pin.length >= MAX_PIN) return;
             pin += d;
             updatePinDisplay();
+            if (navigator.vibrate) navigator.vibrate(10);
         }
 
         function clearPin() {
@@ -329,50 +303,37 @@
         }
 
         async function tryLogin() {
-            console.log('tryLogin called', selectedUser, pin);
-            if (!selectedUser || pin.length < MIN_PIN) {
-                console.log('Validation failed');
-                return;
-            }
+            if (!selectedUser || pin.length < MIN_PIN) return;
 
             try {
-                console.log('Sending request...');
                 const res = await fetch('/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        username: selectedUser.id, 
-                        password: pin 
-                    })
+                    body: JSON.stringify({ username: selectedUser.id, password: pin })
                 });
                 const data = await res.json();
-                console.log('Response:', data);
 
                 if (data.success) {
                     window.location.href = '/';
                 } else {
-                    showMessage('Code PIN incorrect');
-                    shakePinDisplay();
-                    pin = '';
-                    updatePinDisplay();
+                    showToast('Code PIN incorrect');
+                    document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+                    if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+                    setTimeout(() => {
+                        pin = '';
+                        updatePinDisplay();
+                    }, 400);
                 }
             } catch (e) {
-                console.error('Error:', e);
-                showMessage('Erreur de communication');
+                showToast('Erreur de connexion');
             }
         }
 
-        function shakePinDisplay() {
-            const dots = document.querySelectorAll('.pin-dot');
-            dots.forEach(d => d.classList.add('error'));
-            setTimeout(() => dots.forEach(d => d.classList.remove('error')), 500);
-        }
-
-        function showMessage(text) {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.classList.add('show');
-            setTimeout(() => msg.classList.remove('show'), 3000);
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
         }
     </script>
 </body>
