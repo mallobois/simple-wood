@@ -1,3 +1,150 @@
+# ============== DONNEES DE REFERENCE ==============
+
+# PSF = Point de Saturation des Fibres (valeur moyenne par essence)
+# Sources: FNB, CIRAD, Wood Handbook
+ESSENCES_DEFAULT = [
+    {"code": "HET", "nom": "Hêtre", "nom_latin": "Fagus sylvatica", "densite_frais": 950, "densite_sec": 650, "psf": 32},
+    {"code": "CHE", "nom": "Chêne indigène", "nom_latin": "Quercus", "densite_frais": 1070, "densite_sec": 720, "psf": 29},
+    {"code": "CHS", "nom": "Chêne sessile", "nom_latin": "Quercus petraea", "densite_frais": 1070, "densite_sec": 720, "psf": 29},
+    {"code": "CHP", "nom": "Chêne pédonculé", "nom_latin": "Quercus robur", "densite_frais": 1070, "densite_sec": 720, "psf": 29},
+    {"code": "FRE", "nom": "Frêne", "nom_latin": "Fraxinus", "densite_frais": 920, "densite_sec": 680, "psf": 28},
+    {"code": "FRC", "nom": "Frêne commun", "nom_latin": "Fraxinus excelsior", "densite_frais": 920, "densite_sec": 680, "psf": 28},
+    {"code": "CHT", "nom": "Châtaignier", "nom_latin": "Castanea sativa", "densite_frais": 950, "densite_sec": 590, "psf": 30},
+    {"code": "MER", "nom": "Merisier", "nom_latin": "Prunus avium", "densite_frais": 900, "densite_sec": 620, "psf": 29},
+    {"code": "CHA", "nom": "Charme", "nom_latin": "Carpinus betulus", "densite_frais": 1000, "densite_sec": 750, "psf": 30},
+    {"code": "NOY", "nom": "Noyer", "nom_latin": "Juglans regia", "densite_frais": 900, "densite_sec": 680, "psf": 27},
+    {"code": "ROB", "nom": "Robinier", "nom_latin": "Robinia pseudoacacia", "densite_frais": 950, "densite_sec": 770, "psf": 26},
+    {"code": "ERP", "nom": "Érable plane", "nom_latin": "Acer platanoides", "densite_frais": 900, "densite_sec": 650, "psf": 29},
+    {"code": "ERC", "nom": "Érable champêtre", "nom_latin": "Acer campestre", "densite_frais": 900, "densite_sec": 650, "psf": 29},
+    {"code": "ERS", "nom": "Érable sycomore", "nom_latin": "Acer pseudoplatanus", "densite_frais": 900, "densite_sec": 650, "psf": 29},
+    {"code": "BOU", "nom": "Bouleau", "nom_latin": "Betula", "densite_frais": 850, "densite_sec": 650, "psf": 28},
+    {"code": "TRE", "nom": "Tremble", "nom_latin": "Populus tremula", "densite_frais": 800, "densite_sec": 500, "psf": 29},
+    {"code": "PEU", "nom": "Peuplier", "nom_latin": "Populus", "densite_frais": 800, "densite_sec": 450, "psf": 29},
+    {"code": "TIL", "nom": "Tilleul", "nom_latin": "Tilia", "densite_frais": 800, "densite_sec": 530, "psf": 31},
+    {"code": "ALT", "nom": "Alisier torminal", "nom_latin": "Sorbus torminalis", "densite_frais": 950, "densite_sec": 750, "psf": 30},
+    {"code": "ALB", "nom": "Alisier blanc", "nom_latin": "Sorbus aria", "densite_frais": 950, "densite_sec": 750, "psf": 30},
+    {"code": "COR", "nom": "Cormier", "nom_latin": "Sorbus domestica", "densite_frais": 950, "densite_sec": 750, "psf": 30},
+    {"code": "AUN", "nom": "Aulne glutineux", "nom_latin": "Alnus glutinosa", "densite_frais": 850, "densite_sec": 530, "psf": 29},
+    {"code": "ORM", "nom": "Orme", "nom_latin": "Ulmus", "densite_frais": 950, "densite_sec": 680, "psf": 28},
+    {"code": "EPC", "nom": "Épicéa commun", "nom_latin": "Picea abies", "densite_frais": 860, "densite_sec": 470, "psf": 30},
+    {"code": "DOU", "nom": "Douglas", "nom_latin": "Pseudotsuga menziesii", "densite_frais": 850, "densite_sec": 530, "psf": 26},
+    {"code": "MEE", "nom": "Mélèze d'Europe", "nom_latin": "Larix decidua", "densite_frais": 900, "densite_sec": 590, "psf": 28},
+    {"code": "P.S", "nom": "Pin sylvestre", "nom_latin": "Pinus sylvestris", "densite_frais": 850, "densite_sec": 520, "psf": 28},
+    {"code": "P.M", "nom": "Pin maritime", "nom_latin": "Pinus pinaster", "densite_frais": 900, "densite_sec": 530, "psf": 29},
+    {"code": "P.N", "nom": "Pin noir", "nom_latin": "Pinus nigra", "densite_frais": 900, "densite_sec": 550, "psf": 28},
+    {"code": "S.P", "nom": "Sapin pectiné", "nom_latin": "Abies alba", "densite_frais": 850, "densite_sec": 450, "psf": 30},
+]
+
+PRODUITS_DEFAULT = [
+    {"code": "GRU", "nom": "Grumes"},
+    {"code": "TRO", "nom": "Tronçons"},
+    {"code": "PQT", "nom": "Paquets"},
+    {"code": "PDB", "nom": "Prédébits"},
+    {"code": "PNX", "nom": "Panneaux"},
+]
+
+# Épaisseurs calculées avec retrait tangentiel à 10% d'humidité
+# Formule: ep_frais = ep_sec / (1 - retrait_effectif)
+# retrait_effectif = retrait_total × (30-10)/30
+EPAISSEURS_DEFAULT = [
+    # Hêtre (retrait tangentiel total 12%, effectif à 10% = 8%)
+    {"essence": "HET", "ep_frais": 29, "ep_sec": 27},
+    {"essence": "HET", "ep_frais": 35, "ep_sec": 32},
+    {"essence": "HET", "ep_frais": 49, "ep_sec": 45},
+    {"essence": "HET", "ep_frais": 54, "ep_sec": 50},
+    {"essence": "HET", "ep_frais": 87, "ep_sec": 80},
+    # Chêne (retrait tangentiel total 10%, effectif à 10% = 6.7%)
+    {"essence": "CHE", "ep_frais": 29, "ep_sec": 27},
+    {"essence": "CHE", "ep_frais": 34, "ep_sec": 32},
+    {"essence": "CHE", "ep_frais": 48, "ep_sec": 45},
+    {"essence": "CHE", "ep_frais": 54, "ep_sec": 50},
+    {"essence": "CHE", "ep_frais": 86, "ep_sec": 80},
+    # Frêne (retrait tangentiel total 8%, effectif à 10% = 5.3%)
+    {"essence": "FRE", "ep_frais": 29, "ep_sec": 27},
+    {"essence": "FRE", "ep_frais": 34, "ep_sec": 32},
+    {"essence": "FRE", "ep_frais": 48, "ep_sec": 45},
+    {"essence": "FRE", "ep_frais": 53, "ep_sec": 50},
+    {"essence": "FRE", "ep_frais": 84, "ep_sec": 80},
+    # Érable sycomore (retrait tangentiel total 8%, effectif à 10% = 5.3%)
+    {"essence": "ERS", "ep_frais": 29, "ep_sec": 27},
+    {"essence": "ERS", "ep_frais": 34, "ep_sec": 32},
+    {"essence": "ERS", "ep_frais": 48, "ep_sec": 45},
+    {"essence": "ERS", "ep_frais": 53, "ep_sec": 50},
+    {"essence": "ERS", "ep_frais": 84, "ep_sec": 80},
+    # Merisier (retrait tangentiel total 10%, effectif à 10% = 6.7%)
+    {"essence": "MER", "ep_frais": 29, "ep_sec": 27},
+    {"essence": "MER", "ep_frais": 34, "ep_sec": 32},
+    {"essence": "MER", "ep_frais": 48, "ep_sec": 45},
+    {"essence": "MER", "ep_frais": 54, "ep_sec": 50},
+    {"essence": "MER", "ep_frais": 86, "ep_sec": 80},
+    # Noyer (retrait tangentiel total 7.5%, effectif à 10% = 5%)
+    {"essence": "NOY", "ep_frais": 28, "ep_sec": 27},
+    {"essence": "NOY", "ep_frais": 34, "ep_sec": 32},
+    {"essence": "NOY", "ep_frais": 47, "ep_sec": 45},
+    {"essence": "NOY", "ep_frais": 53, "ep_sec": 50},
+    {"essence": "NOY", "ep_frais": 84, "ep_sec": 80},
+    # Châtaignier (retrait tangentiel total 8%, effectif à 10% = 5.3%)
+    {"essence": "CHT", "ep_frais": 29, "ep_sec": 27},
+    {"essence": "CHT", "ep_frais": 34, "ep_sec": 32},
+    {"essence": "CHT", "ep_frais": 48, "ep_sec": 45},
+    {"essence": "CHT", "ep_frais": 53, "ep_sec": 50},
+    {"essence": "CHT", "ep_frais": 84, "ep_sec": 80},
+    # Charme (retrait tangentiel total 11.5%, effectif à 10% = 7.7%)
+    {"essence": "CHA", "ep_frais": 29, "ep_sec": 27},
+    {"essence": "CHA", "ep_frais": 35, "ep_sec": 32},
+    {"essence": "CHA", "ep_frais": 49, "ep_sec": 45},
+    {"essence": "CHA", "ep_frais": 54, "ep_sec": 50},
+    {"essence": "CHA", "ep_frais": 87, "ep_sec": 80},
+    # Peuplier (retrait tangentiel total 8.5%, effectif à 10% = 5.7%)
+    {"essence": "PEU", "ep_frais": 29, "ep_sec": 27},
+    {"essence": "PEU", "ep_frais": 34, "ep_sec": 32},
+    {"essence": "PEU", "ep_frais": 48, "ep_sec": 45},
+    {"essence": "PEU", "ep_frais": 53, "ep_sec": 50},
+    {"essence": "PEU", "ep_frais": 85, "ep_sec": 80},
+]
+
+
+def init_reference_tables():
+    """Initialise les tables de référence si elles sont vides"""
+    if spreadsheet is None:
+        print("⚠ Google Sheets non connecté - tables non initialisées")
+        return
+    
+    config = load_config()
+    
+    # Essences
+    essences_config = next((t for t in config.get('tables', []) if t['id'] == 'essences'), None)
+    if essences_config:
+        existing = get_table_values('essences')
+        if len(existing) == 0:
+            print("\u2713 Initialisation des essences...")
+            get_or_create_table_sheet('essences', essences_config)
+            for e in ESSENCES_DEFAULT:
+                add_table_value('essences', essences_config, e)
+            print(f"  {len(ESSENCES_DEFAULT)} essences ajoutées")
+    
+    # Produits
+    produits_config = next((t for t in config.get('tables', []) if t['id'] == 'produits'), None)
+    if produits_config:
+        existing = get_table_values('produits')
+        if len(existing) == 0:
+            print("\u2713 Initialisation des produits...")
+            get_or_create_table_sheet('produits', produits_config)
+            for p in PRODUITS_DEFAULT:
+                add_table_value('produits', produits_config, p)
+            print(f"  {len(PRODUITS_DEFAULT)} produits ajoutés")
+    
+    # Épaisseurs
+    epaisseurs_config = next((t for t in config.get('tables', []) if t['id'] == 'epaisseurs'), None)
+    if epaisseurs_config:
+        existing = get_table_values('epaisseurs')
+        if len(existing) == 0:
+            print("\u2713 Initialisation des épaisseurs...")
+            get_or_create_table_sheet('epaisseurs', epaisseurs_config)
+            for ep in EPAISSEURS_DEFAULT:
+                add_table_value('epaisseurs', epaisseurs_config, ep)
+            print(f"  {len(EPAISSEURS_DEFAULT)} épaisseurs ajoutées")
+
 #!/usr/bin/env python3
 """
 Serveur d'impression Zebra ZPL pour Raspberry Pi
@@ -317,7 +464,8 @@ DEFAULT_CONFIG = {
                 {'id': 'nom', 'nom': 'Nom', 'type': 'text'},
                 {'id': 'nom_latin', 'nom': 'Nom latin', 'type': 'text'},
                 {'id': 'densite_frais', 'nom': 'Densité frais (kg/m³)', 'type': 'number'},
-                {'id': 'densite_sec', 'nom': 'Densité sec (kg/m³)', 'type': 'number'}
+                {'id': 'densite_sec', 'nom': 'Densité sec (kg/m³)', 'type': 'number'},
+                {'id': 'psf', 'nom': 'PSF (%)', 'type': 'number'}
             ]
         },
         {
@@ -1095,6 +1243,7 @@ def api_update():
 if not CONFIG_FILE.exists():
     save_config(DEFAULT_CONFIG)
 init_google_sheets()
+init_reference_tables()  # Remplit les tables si vides
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
