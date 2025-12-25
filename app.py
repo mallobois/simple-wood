@@ -78,15 +78,26 @@ def init_sheet_headers():
             first_row = sheet.row_values(1)
             if not first_row:
                 sheet.append_row(header_row)
-                if sheet_name == 'Utilisateurs':
+            
+            # Pour Utilisateurs: vérifier s'il y a des données (au-delà des en-têtes)
+            if sheet_name == 'Utilisateurs':
+                all_values = sheet.get_all_values()
+                if len(all_values) <= 1:  # Seulement les en-têtes ou vide
+                    print("→ Ajout des utilisateurs par défaut...")
                     sheet.append_row(['admin', 'admin', 'Administrateur', 'admin'])
                     sheet.append_row(['operateur', '1234', 'Opérateur', 'operateur'])
+                    print("✓ Utilisateurs ajoutés: admin, operateur")
+                else:
+                    print(f"✓ {len(all_values)-1} utilisateur(s) trouvé(s)")
+                    
         except gspread.WorksheetNotFound:
+            print(f"→ Création onglet {sheet_name}...")
             sheet = spreadsheet.add_worksheet(title=sheet_name, rows=1000, cols=20)
             sheet.append_row(header_row)
             if sheet_name == 'Utilisateurs':
                 sheet.append_row(['admin', 'admin', 'Administrateur', 'admin'])
                 sheet.append_row(['operateur', '1234', 'Opérateur', 'operateur'])
+                print("✓ Utilisateurs ajoutés: admin, operateur")
 
 
 def log_to_sheets(sheet_name: str, data: list):
