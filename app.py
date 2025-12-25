@@ -601,8 +601,10 @@ def api_test():
     return jsonify(result)
 
 
+# Initialisation au chargement du module
+if not CONFIG_FILE.exists():
+    save_config(DEFAULT_CONFIG)
+init_google_sheets()
+
 if __name__ == '__main__':
-    if not CONFIG_FILE.exists():
-        save_config(DEFAULT_CONFIG)
-    init_google_sheets()
     app.run(host='0.0.0.0', port=5000, debug=True)
