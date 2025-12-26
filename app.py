@@ -1106,6 +1106,12 @@ def page_parametres():
     return render_template('parametres.html', config=load_config())
 
 
+@app.route('/essences')
+@admin_required
+def page_essences():
+    return render_template('essences.html')
+
+
 # ============================================================================
 # API UTILISATEURS
 # ============================================================================
@@ -1485,7 +1491,19 @@ init_reference_tables()
 if __name__ == '__main__':
     print("\n" + "=" * 50)
     print("  MALLO BOIS - WoodStock")
-    print("  http://localhost:5000")
     print("=" * 50)
     _afficher_tableau_epaisseurs()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    PORT = 5001
+    
+    if os.path.exists('cert.pem') and os.path.exists('key.pem'):
+        import ssl
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain('cert.pem', 'key.pem')
+        print(f"  🔒 https://localhost:{PORT}")
+        print("=" * 50)
+        app.run(host='0.0.0.0', port=PORT, debug=False, ssl_context=context)
+    else:
+        print(f"  http://localhost:{PORT}")
+        print("=" * 50)
+        app.run(host='0.0.0.0', port=PORT, debug=True)

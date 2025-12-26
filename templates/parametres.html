@@ -147,8 +147,7 @@
         }
         
         /* Sync button */
-        .sync-btn { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; }
-        .sync-btn:hover { background: linear-gradient(135deg, #047857 0%, #059669 100%); }
+
     </style>
 </head>
 <body>
@@ -206,7 +205,6 @@
             <div class="values-header">
                 <input type="text" class="values-search" id="values-search" placeholder="🔍 Rechercher..." oninput="filterValues()">
                 <button class="btn btn-primary btn-sm" onclick="openEditModal(null)">+ Ajouter</button>
-                <button class="btn sync-btn btn-sm" id="sync-btn" style="display:none;" onclick="syncTable()">🔄 Sync</button>
             </div>
             
             <!-- Table (desktop) -->
@@ -359,19 +357,38 @@
         // === TABLES ===
         async function loadTables() {
             tables = await (await fetch('/api/tables')).json();
-            document.getElementById('table-list').innerHTML = tables.map(t => `
-                <li class="item">
-                    <div class="item-icon">📋</div>
-                    <div class="item-info">
-                        <div class="item-name">${t.nom}</div>
-                        <div class="item-detail">${(t.colonnes||[]).length} colonnes</div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-icon" onclick="openValuesModal('${t.id}')" title="Gérer les valeurs">📝</button>
-                        <button class="btn-icon delete" onclick="deleteItem('table','${t.id}')" title="Supprimer">🗑️</button>
-                    </div>
-                </li>
-            `).join('');
+            document.getElementById('table-list').innerHTML = tables.map(t => {
+                // Essences : lien vers page dédiée
+                if (t.id === 'essences') {
+                    return `
+                        <li class="item" onclick="window.location='/essences'" style="cursor:pointer;">
+                            <div class="item-icon" style="background:linear-gradient(135deg, #059669 0%, #10b981 100%);">🌳</div>
+                            <div class="item-info">
+                                <div class="item-name">${t.nom}</div>
+                                <div class="item-detail">Épaisseurs & qualités par essence</div>
+                            </div>
+                            <span style="color:var(--border);font-size:1.25rem;">›</span>
+                        </li>
+                    `;
+                }
+                // Tables cachées (gérées via page essences)
+                if (t.id === 'epaisseurs' || t.id === 'qualites') {
+                    return '';
+                }
+                // Autres tables
+                return `
+                    <li class="item">
+                        <div class="item-icon">📋</div>
+                        <div class="item-info">
+                            <div class="item-name">${t.nom}</div>
+                            <div class="item-detail">${(t.colonnes||[]).length} colonnes</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn-icon" onclick="openValuesModal('${t.id}')" title="Gérer les valeurs">📝</button>
+                        </div>
+                    </li>
+                `;
+            }).join('');
         }
 
         function openTableModal() { 
@@ -404,9 +421,7 @@
             document.getElementById('values-modal-title').textContent = currentTable.nom;
             document.getElementById('values-search').value = '';
             
-            // Bouton sync pour essences/epaisseurs
-            const syncBtn = document.getElementById('sync-btn');
-            syncBtn.style.display = ['essences', 'epaisseurs'].includes(tableId) ? 'inline-flex' : 'none';
+
             
             // Charger les refs
             refTableValues = {};
@@ -714,21 +729,7 @@
             }
         }
 
-        async function syncTable() {
-            if (!confirm(`Resynchroniser toutes les ${currentTable.nom} depuis le code source ?\n\nCette action va remplacer TOUTES les données existantes.`)) return;
-            
-            showToast('Synchronisation en cours...', 'success');
-            const endpoint = currentTable.id === 'essences' ? '/api/essences/sync' : '/api/epaisseurs/sync';
-            const r = await (await fetch(endpoint, { method: 'POST' })).json();
-            
-            if (r.success) {
-                showToast(r.message, 'success');
-                currentTableValues = await (await fetch('/api/tables/' + currentTable.id + '/values')).json();
-                filterValues();
-            } else {
-                showToast(r.message, 'error');
-            }
-        }
+
 
         // === PRINTERS ===
         async function loadPrinters() {

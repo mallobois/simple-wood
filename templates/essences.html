@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Essences - WoodStock</title>
+    <style>
+        :root {
+            --bg: #f8f9fa; --card: #ffffff; --text: #1a1a2e; --text-muted: #6c757d;
+            --primary: #2563eb; --success: #059669; --danger: #dc2626; --warning: #d97706;
+            --border: #e5e7eb; --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100dvh; }
+        
+        /* Header */
+        header { background: var(--card); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; position: sticky; top: 0; z-index: 50; }
+        .back { color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+        header h1 { font-size: 1rem; font-weight: 600; flex: 1; }
+        
+        /* Toast */
+        .toast { position: fixed; top: 4rem; left: 50%; transform: translateX(-50%) translateY(-20px); padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.9rem; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 100; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--danger); color: white; }
+        
+        /* Layout */
+        .container { max-width: 900px; margin: 0 auto; padding: 1rem; }
+        
+        /* === LISTE DES ESSENCES === */
+        #liste-view { display: block; }
+        #fiche-view { display: none; }
+        
+        .search-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .search-bar input { flex: 1; padding: 0.625rem 0.875rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+        .search-bar input:focus { outline: none; border-color: var(--primary); }
+        .count-badge { background: var(--bg); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; }
+        
+        .essence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
+        .essence-card { background: var(--card); border-radius: var(--radius); padding: 0.875rem; box-shadow: var(--shadow); cursor: pointer; transition: all 0.15s; display: flex; gap: 0.75rem; align-items: center; }
+        .essence-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-1px); }
+        .essence-color { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+        .essence-info { flex: 1; min-width: 0; }
+        .essence-code { font-weight: 700; font-size: 0.95rem; }
+        .essence-nom { font-size: 0.85rem; color: var(--text-muted); }
+        .essence-badges { display: flex; gap: 0.25rem; margin-top: 0.25rem; flex-wrap: wrap; }
+        .essence-badge { font-size: 0.65rem; padding: 0.15rem 0.375rem; background: var(--bg); border-radius: 4px; color: var(--text-muted); }
+        .essence-arrow { color: var(--border); font-size: 1.25rem; }
+        
+        /* === FICHE ESSENCE === */
+        .fiche-header { background: var(--card); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; box-shadow: var(--shadow); display: flex; gap: 1rem; align-items: flex-start; }
+        .fiche-color { width: 64px; height: 64px; border-radius: 12px; flex-shrink: 0; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .fiche-title { flex: 1; }
+        .fiche-title h2 { font-size: 1.25rem; margin-bottom: 0.25rem; }
+        .fiche-title .latin { font-size: 0.85rem; color: var(--text-muted); font-style: italic; }
+        .fiche-title .intl { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+        .btn-edit { padding: 0.5rem 0.875rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; }
+        .btn-edit:hover { background: #1d4ed8; }
+        
+        /* Props Grid */
+        .props-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+        .prop-card { background: var(--card); border-radius: 8px; padding: 0.625rem 0.75rem; box-shadow: var(--shadow); }
+        .prop-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .prop-value { font-size: 1rem; font-weight: 600; margin-top: 0.125rem; }
+        .prop-value.small { font-size: 0.85rem; }
+        
+        /* Section */
+        .section { background: var(--card); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+        .section-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.375rem; }
+        
+        /* Tags (épaisseurs, qualités) */
+        .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .tag { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 0.75rem; background: var(--bg); border-radius: 8px; font-size: 0.85rem; font-weight: 500; }
+        .tag .arrow { color: var(--text-muted); font-size: 0.75rem; }
+        .tag .delete { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; padding: 0; margin-left: 0.25rem; line-height: 1; }
+        .tag .delete:hover { color: var(--danger); }
+        .tag-add { background: transparent; border: 2px dashed var(--border); color: var(--primary); cursor: pointer; }
+        .tag-add:hover { border-color: var(--primary); background: #eff6ff; }
+        
+        /* Produit Group */
+        .produit-group { margin-bottom: 1rem; }
+        .produit-group:last-child { margin-bottom: 0; }
+        .produit-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; padding-bottom: 0.375rem; border-bottom: 1px solid var(--border); }
+        .produit-name { font-weight: 600; font-size: 0.9rem; flex: 1; }
+        .produit-code { font-size: 0.7rem; color: var(--text-muted); background: var(--bg); padding: 0.15rem 0.375rem; border-radius: 4px; }
+        .produit-header .btn-add-small { font-size: 0.75rem; padding: 0.25rem 0.5rem; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .produit-header .btn-add-small:hover { background: #1d4ed8; }
+        .produit-header .btn-remove { font-size: 0.8rem; padding: 0.25rem 0.5rem; background: none; color: var(--text-muted); border: none; cursor: pointer; }
+        .produit-header .btn-remove:hover { color: var(--danger); }
+        .qualite-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+        .qualite-tag { padding: 0.375rem 0.625rem; background: #dbeafe; color: #1e40af; border-radius: 6px; font-size: 0.8rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .qualite-tag .delete { background: none; border: none; color: #1e40af; opacity: 0.5; cursor: pointer; font-size: 0.85rem; }
+        .qualite-tag .delete:hover { opacity: 1; color: var(--danger); }
+        .empty-qualites { font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
+        
+        .btn-add-produit { width: 100%; padding: 0.625rem; background: transparent; border: 2px dashed var(--border); border-radius: 8px; color: var(--primary); font-size: 0.85rem; font-weight: 500; cursor: pointer; margin-top: 0.5rem; }
+        .btn-add-produit:hover { border-color: var(--primary); background: #eff6ff; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--card); border-radius: 16px; padding: 1.25rem; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+        .modal h3 { font-size: 1.1rem; margin-bottom: 1rem; }
+        .modal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .modal-actions .btn { flex: 1; padding: 0.625rem; border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; }
+        .btn-secondary { background: var(--bg); color: var(--text); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        
+        .form-group { margin-bottom: 0.75rem; }
+        .form-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+        
+        .field-group { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+        .field-group:last-child { border-bottom: none; margin-bottom: 0; }
+        .field-group-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 0.5rem; }
+        
+        /* Image preview */
+        .image-preview { margin-top: 0.5rem; }
+        .image-preview img { max-width: 100%; max-height: 120px; border-radius: 8px; }
+        
+        @media (max-width: 600px) {
+            .fiche-header { flex-direction: column; align-items: stretch; }
+            .fiche-color { width: 100%; height: 80px; }
+            .props-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/parametres" class="back" id="back-link">← Paramètres</a>
+        <h1 id="page-title">Essences</h1>
+    </header>
+
+    <div id="toast" class="toast"></div>
+
+    <div class="container">
+        <!-- VUE LISTE -->
+        <div id="liste-view">
+            <div class="search-bar">
+                <input type="text" id="search" placeholder="🔍 Rechercher une essence..." oninput="filterEssences()">
+                <span class="count-badge" id="count">0 essences</span>
+            </div>
+            <div class="essence-grid" id="essence-grid"></div>
+        </div>
+
+        <!-- VUE FICHE -->
+        <div id="fiche-view">
+            <div class="fiche-header">
+                <div class="fiche-color" id="fiche-color"></div>
+                <div class="fiche-title">
+                    <h2 id="fiche-titre"></h2>
+                    <div class="latin" id="fiche-latin"></div>
+                    <div class="intl" id="fiche-intl"></div>
+                </div>
+                <button class="btn-edit" onclick="openEditEssenceModal()">Modifier</button>
+            </div>
+
+            <div class="props-grid" id="props-grid"></div>
+
+            <!-- Épaisseurs -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title">📐 Épaisseurs (frais → sec)</span>
+                </div>
+                <div class="tags" id="epaisseurs-tags"></div>
+            </div>
+
+            <!-- Qualités par produit -->
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-title">🏷️ Qualités par produit</span>
+                </div>
+                <div id="qualites-container"></div>
+                <button class="btn-add-produit" id="btn-add-produit" onclick="openAddProduitModal()">+ Associer un produit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Épaisseur -->
+    <div class="modal" id="modal-epaisseur">
+        <div class="modal-content">
+            <h3 id="modal-epaisseur-title">Ajouter une épaisseur</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Épaisseur frais (mm)</label>
+                    <input type="number" id="ep-frais" placeholder="31">
+                </div>
+                <div class="form-group">
+                    <label>Épaisseur sec (mm)</label>
+                    <input type="number" id="ep-sec" placeholder="27">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('modal-epaisseur')">Annuler</button>
+                <button class="btn btn-primary" onclick="saveEpaisseur()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Qualité -->
+    <div class="modal" id="modal-qualite">
+        <div class="modal-content">
+            <h3>Ajouter une qualité</h3>
+            <input type="hidden" id="qualite-produit">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Code</label>
+                    <input type="text" id="qualite-code" placeholder="QF-A">
+                </div>
+                <div class="form-group">
+                    <label>Nom (optionnel)</label>
+                    <input type="text" id="qualite-nom" placeholder="Qualité Frais A">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('modal-qualite')">Annuler</button>
+                <button class="btn btn-primary" onclick="saveQualite()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Produit -->
+    <div class="modal" id="modal-produit">
+        <div class="modal-content">
+            <h3>Associer un produit</h3>
+            <div class="form-group">
+                <label>Produit</label>
+                <select id="select-produit"></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('modal-produit')">Annuler</button>
+                <button class="btn btn-primary" onclick="addProduitAssociation()">Associer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Essence -->
+    <div class="modal" id="modal-essence">
+        <div class="modal-content" style="max-width:600px;">
+            <h3>Modifier l'essence</h3>
+            <div id="essence-form"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('modal-essence')">Annuler</button>
+                <button class="btn btn-primary" onclick="saveEssence()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let essences = [], epaisseurs = [], qualites = [], produits = [];
+        let filteredEssences = [];
+        let currentEssence = null;
+
+        // Colonnes des essences pour l'édition
+        const ESSENCE_FIELDS = [
+            { group: '🏷️ Identification', fields: [
+                { id: 'code', nom: 'Code', type: 'text' },
+                { id: 'nom', nom: 'Nom', type: 'text' },
+                { id: 'nom_latin', nom: 'Nom latin', type: 'text' },
+                { id: 'nom_en', nom: 'Nom EN', type: 'text' },
+                { id: 'nom_de', nom: 'Nom DE', type: 'text' }
+            ]},
+            { group: '⚖️ Densités', fields: [
+                { id: 'densite_frais', nom: 'Densité frais', type: 'number' },
+                { id: 'densite_sec', nom: 'Densité sec', type: 'number' }
+            ]},
+            { group: '📐 Retrait', fields: [
+                { id: 'psf', nom: 'PSF %', type: 'number' },
+                { id: 'retrait_t', nom: 'Retrait T %', type: 'number' },
+                { id: 'retrait_r', nom: 'Retrait R %', type: 'number' },
+                { id: 'ratio_t_r', nom: 'Ratio T/R', type: 'number' }
+            ]},
+            { group: '🌡️ Séchage', fields: [
+                { id: 'temp_max', nom: 'Temp max °C', type: 'number' },
+                { id: 'risque_fentes', nom: 'Risque fentes (1-5)', type: 'number' },
+                { id: 'risque_collapse', nom: 'Risque collapse (1-5)', type: 'number' },
+                { id: 'duree_27mm', nom: 'Durée 27mm (j)', type: 'number' }
+            ]},
+            { group: '🔧 Usinage', fields: [
+                { id: 'durete', nom: 'Dureté Monnin', type: 'number' },
+                { id: 'fil', nom: 'Fil', type: 'text' },
+                { id: 'grain', nom: 'Grain', type: 'text' }
+            ]},
+            { group: '🛡️ Durabilité', fields: [
+                { id: 'durabilite', nom: 'Durabilité (1-5)', type: 'number' },
+                { id: 'impregnabilite', nom: 'Imprégnabilité (1-4)', type: 'number' },
+                { id: 'aubier', nom: 'Aubier', type: 'text' }
+            ]},
+            { group: '🎨 Aspect', fields: [
+                { id: 'couleur', nom: 'Couleur', type: 'text' },
+                { id: 'couleur_hex', nom: 'Couleur hex', type: 'color' },
+                { id: 'image_url', nom: 'Image URL', type: 'text' }
+            ]}
+        ];
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        async function init() {
+            await loadAllData();
+            renderEssencesList();
+            
+            // Check URL hash
+            if (window.location.hash) {
+                const code = window.location.hash.slice(1);
+                const ess = essences.find(e => e['Code'] === code);
+                if (ess) showFiche(ess);
+            }
+        }
+
+        async function loadAllData() {
+            [essences, epaisseurs, qualites, produits] = await Promise.all([
+                fetch('/api/tables/essences/values').then(r => r.json()),
+                fetch('/api/tables/epaisseurs/values').then(r => r.json()),
+                fetch('/api/tables/qualites/values').then(r => r.json()),
+                fetch('/api/tables/produits/values').then(r => r.json())
+            ]);
+            filteredEssences = [...essences];
+        }
+
+        // === LISTE ===
+        function filterEssences() {
+            const q = document.getElementById('search').value.toLowerCase().trim();
+            filteredEssences = essences.filter(e => 
+                !q || Object.values(e).some(v => String(v).toLowerCase().includes(q))
+            );
+            renderEssencesList();
+        }
+
+        function renderEssencesList() {
+            document.getElementById('count').textContent = `${filteredEssences.length} essence${filteredEssences.length > 1 ? 's' : ''}`;
+            
+            document.getElementById('essence-grid').innerHTML = filteredEssences.map(e => {
+                const color = e['Couleur hex'] || '#ccc';
+                const badges = [];
+                if (e['Densité sec']) badges.push(`${e['Densité sec']} kg/m³`);
+                if (e['Dureté Monnin']) badges.push(`Dureté ${e['Dureté Monnin']}`);
+                
+                return `
+                    <div class="essence-card" onclick="showFiche(essences.find(x=>x.ID===${e.ID}))">
+                        <div class="essence-color" style="background:${color}"></div>
+                        <div class="essence-info">
+                            <div class="essence-code">${e['Code']} · ${e['Nom']}</div>
+                            <div class="essence-nom">${e['Nom latin'] || ''}</div>
+                            ${badges.length ? `<div class="essence-badges">${badges.map(b => `<span class="essence-badge">${b}</span>`).join('')}</div>` : ''}
+                        </div>
+                        <span class="essence-arrow">›</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // === FICHE ===
+        function showFiche(essence) {
+            currentEssence = essence;
+            window.location.hash = essence['Code'];
+            
+            document.getElementById('liste-view').style.display = 'none';
+            document.getElementById('fiche-view').style.display = 'block';
+            document.getElementById('back-link').textContent = '← Essences';
+            document.getElementById('back-link').href = '#';
+            document.getElementById('back-link').onclick = (e) => { e.preventDefault(); showListe(); };
+            document.getElementById('page-title').textContent = essence['Code'] + ' · ' + essence['Nom'];
+            
+            // Header
+            document.getElementById('fiche-color').style.background = essence['Couleur hex'] || '#ccc';
+            document.getElementById('fiche-titre').textContent = essence['Code'] + ' · ' + essence['Nom'];
+            document.getElementById('fiche-latin').textContent = essence['Nom latin'] || '';
+            document.getElementById('fiche-intl').textContent = [essence['Nom EN'], essence['Nom DE']].filter(Boolean).join(' · ');
+            
+            // Props
+            const props = [
+                { label: 'Densité sec', value: essence['Densité sec'], unit: 'kg/m³' },
+                { label: 'PSF', value: essence['PSF %'], unit: '%' },
+                { label: 'Retrait T', value: essence['Retrait T %'], unit: '%' },
+                { label: 'Ratio T/R', value: essence['Ratio T/R'], unit: '' },
+                { label: 'Temp max', value: essence['Temp max °C'], unit: '°C' },
+                { label: 'Dureté', value: essence['Dureté Monnin'], unit: 'Monnin' },
+                { label: 'Durabilité', value: essence['Durabilité'], unit: '/5' },
+                { label: 'Fil', value: essence['Fil'], unit: '', small: true }
+            ];
+            document.getElementById('props-grid').innerHTML = props.filter(p => p.value).map(p => `
+                <div class="prop-card">
+                    <div class="prop-label">${p.label}</div>
+                    <div class="prop-value ${p.small ? 'small' : ''}">${p.value}${p.unit ? ' ' + p.unit : ''}</div>
+                </div>
+            `).join('');
+            
+            renderEpaisseurs();
+            renderQualites();
+        }
+
+        function showListe() {
+            window.location.hash = '';
+            document.getElementById('liste-view').style.display = 'block';
+            document.getElementById('fiche-view').style.display = 'none';
+            document.getElementById('back-link').textContent = '← Paramètres';
+            document.getElementById('back-link').href = '/parametres';
+            document.getElementById('back-link').onclick = null;
+            document.getElementById('page-title').textContent = 'Essences';
+            currentEssence = null;
+        }
+
+        // === ÉPAISSEURS ===
+        function renderEpaisseurs() {
+            const code = currentEssence['Code'];
+            const eps = epaisseurs.filter(e => e['Essence'] === code).sort((a, b) => (a['Ép. sec (mm)'] || 0) - (b['Ép. sec (mm)'] || 0));
+            
+            document.getElementById('epaisseurs-tags').innerHTML = eps.map(e => `
+                <div class="tag">
+                    <span>${e['Ép. frais (mm)']}</span>
+                    <span class="arrow">→</span>
+                    <span>${e['Ép. sec (mm)']}mm</span>
+                    <button class="delete" onclick="deleteEpaisseur(${e.ID})" title="Supprimer">×</button>
+                </div>
+            `).join('') + `
+                <button class="tag tag-add" onclick="openAddEpaisseurModal()">+ Ajouter</button>
+            `;
+        }
+
+        function openAddEpaisseurModal() {
+            document.getElementById('ep-frais').value = '';
+            document.getElementById('ep-sec').value = '';
+            document.getElementById('modal-epaisseur').classList.add('show');
+            document.getElementById('ep-frais').focus();
+        }
+
+        async function saveEpaisseur() {
+            const frais = document.getElementById('ep-frais').value.trim();
+            const sec = document.getElementById('ep-sec').value.trim();
+            if (!frais || !sec) return showToast('Remplissez les deux champs', 'error');
+            
+            await fetch('/api/tables/epaisseurs/values', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    essence: currentEssence['Code'],
+                    ep_frais: parseInt(frais),
+                    ep_sec: parseInt(sec)
+                })
+            });
+            
+            closeModal('modal-epaisseur');
+            epaisseurs = await fetch('/api/tables/epaisseurs/values').then(r => r.json());
+            renderEpaisseurs();
+            showToast('Épaisseur ajoutée', 'success');
+        }
+
+        async function deleteEpaisseur(id) {
+            if (!confirm('Supprimer cette épaisseur ?')) return;
+            await fetch('/api/tables/epaisseurs/values/' + id, { method: 'DELETE' });
+            epaisseurs = await fetch('/api/tables/epaisseurs/values').then(r => r.json());
+            renderEpaisseurs();
+            showToast('Supprimé', 'success');
+        }
+
+        // === QUALITÉS ===
+        function renderQualites() {
+            const code = currentEssence['Code'];
+            const essQualites = qualites.filter(q => q['Essence'] === code);
+            
+            // Grouper par produit
+            const produitsAssocies = [...new Set(essQualites.map(q => q['Produit']))];
+            const produitsDispos = produits.filter(p => !produitsAssocies.includes(p['Code']));
+            
+            let html = '';
+            for (const prodCode of produitsAssocies) {
+                const prod = produits.find(p => p['Code'] === prodCode) || { Code: prodCode, Nom: prodCode };
+                const quals = essQualites.filter(q => q['Produit'] === prodCode);
+                
+                html += `
+                    <div class="produit-group">
+                        <div class="produit-header">
+                            <span class="produit-name">${prod['Nom']}</span>
+                            <span class="produit-code">${prod['Code']}</span>
+                            <button class="btn-add-small" onclick="openAddQualiteModal('${prodCode}')">+ Qualité</button>
+                            <button class="btn-remove" onclick="removeProduitAssociation('${prodCode}')" title="Retirer ce produit">🗑️</button>
+                        </div>
+                        <div class="qualite-tags">
+                            ${quals.length ? quals.map(q => `
+                                <span class="qualite-tag">
+                                    ${q['Code']}${q['Nom'] ? ' · ' + q['Nom'] : ''}
+                                    <button class="delete" onclick="deleteQualite(${q.ID})">×</button>
+                                </span>
+                            `).join('') : '<span class="empty-qualites">Aucune qualité définie</span>'}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('qualites-container').innerHTML = html || '<p style="color:var(--text-muted);font-size:0.9rem;">Aucun produit associé</p>';
+            document.getElementById('btn-add-produit').style.display = produitsDispos.length ? 'block' : 'none';
+        }
+
+        function openAddQualiteModal(produitCode) {
+            document.getElementById('qualite-produit').value = produitCode;
+            document.getElementById('qualite-code').value = '';
+            document.getElementById('qualite-nom').value = '';
+            document.getElementById('modal-qualite').classList.add('show');
+            document.getElementById('qualite-code').focus();
+        }
+
+        async function saveQualite() {
+            const produit = document.getElementById('qualite-produit').value;
+            const code = document.getElementById('qualite-code').value.trim();
+            const nom = document.getElementById('qualite-nom').value.trim();
+            if (!code) return showToast('Code requis', 'error');
+            
+            await fetch('/api/tables/qualites/values', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    essence: currentEssence['Code'],
+                    produit: produit,
+                    code: code,
+                    nom: nom
+                })
+            });
+            
+            closeModal('modal-qualite');
+            qualites = await fetch('/api/tables/qualites/values').then(r => r.json());
+            renderQualites();
+            showToast('Qualité ajoutée', 'success');
+        }
+
+        async function deleteQualite(id) {
+            if (!confirm('Supprimer cette qualité ?')) return;
+            await fetch('/api/tables/qualites/values/' + id, { method: 'DELETE' });
+            qualites = await fetch('/api/tables/qualites/values').then(r => r.json());
+            renderQualites();
+            showToast('Supprimé', 'success');
+        }
+
+        function openAddProduitModal() {
+            const code = currentEssence['Code'];
+            const essQualites = qualites.filter(q => q['Essence'] === code);
+            const produitsAssocies = [...new Set(essQualites.map(q => q['Produit']))];
+            const produitsDispos = produits.filter(p => !produitsAssocies.includes(p['Code']));
+            
+            document.getElementById('select-produit').innerHTML = produitsDispos.map(p => 
+                `<option value="${p['Code']}">${p['Nom']} (${p['Code']})</option>`
+            ).join('');
+            
+            document.getElementById('modal-produit').classList.add('show');
+        }
+
+        async function addProduitAssociation() {
+            const produit = document.getElementById('select-produit').value;
+            if (!produit) return;
+            
+            // Créer une qualité vide pour établir l'association
+            await fetch('/api/tables/qualites/values', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    essence: currentEssence['Code'],
+                    produit: produit,
+                    code: 'STD',
+                    nom: 'Standard'
+                })
+            });
+            
+            closeModal('modal-produit');
+            qualites = await fetch('/api/tables/qualites/values').then(r => r.json());
+            renderQualites();
+            showToast('Produit associé', 'success');
+        }
+
+        async function removeProduitAssociation(produitCode) {
+            if (!confirm(`Retirer le produit ${produitCode} et toutes ses qualités ?`)) return;
+            
+            const toDelete = qualites.filter(q => q['Essence'] === currentEssence['Code'] && q['Produit'] === produitCode);
+            for (const q of toDelete) {
+                await fetch('/api/tables/qualites/values/' + q.ID, { method: 'DELETE' });
+            }
+            
+            qualites = await fetch('/api/tables/qualites/values').then(r => r.json());
+            renderQualites();
+            showToast('Produit retiré', 'success');
+        }
+
+        // === EDIT ESSENCE ===
+        function openEditEssenceModal() {
+            let html = '';
+            for (const group of ESSENCE_FIELDS) {
+                html += `<div class="field-group"><div class="field-group-title">${group.group}</div>`;
+                const cols = group.fields.length <= 2 ? 2 : 3;
+                html += `<div class="form-row${cols === 3 ? '-3' : ''}">`;
+                for (const f of group.fields) {
+                    const val = currentEssence[f.nom] || '';
+                    if (f.type === 'color') {
+                        html += `
+                            <div class="form-group">
+                                <label>${f.nom}</label>
+                                <div style="display:flex;gap:0.5rem;">
+                                    <input type="text" id="edit-${f.id}" value="${val}" style="flex:1;">
+                                    <input type="color" value="${val || '#cccccc'}" onchange="document.getElementById('edit-${f.id}').value=this.value" style="width:40px;padding:2px;">
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="form-group">
+                                <label>${f.nom}</label>
+                                <input type="${f.type === 'number' ? 'number' : 'text'}" id="edit-${f.id}" value="${val}" ${f.type === 'number' ? 'step="any"' : ''}>
+                            </div>
+                        `;
+                    }
+                }
+                html += `</div></div>`;
+            }
+            
+            // Preview image
+            if (currentEssence['Image URL']) {
+                html += `<div class="image-preview"><img src="${currentEssence['Image URL']}" onerror="this.style.display='none'"></div>`;
+            }
+            
+            document.getElementById('essence-form').innerHTML = html;
+            document.getElementById('modal-essence').classList.add('show');
+        }
+
+        async function saveEssence() {
+            const data = {};
+            for (const group of ESSENCE_FIELDS) {
+                for (const f of group.fields) {
+                    const el = document.getElementById('edit-' + f.id);
+                    if (el) data[f.id] = el.value.trim();
+                }
+            }
+            
+            await fetch('/api/tables/essences/values/' + currentEssence.ID, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            closeModal('modal-essence');
+            essences = await fetch('/api/tables/essences/values').then(r => r.json());
+            filteredEssences = [...essences];
+            currentEssence = essences.find(e => e.ID === currentEssence.ID);
+            showFiche(currentEssence);
+            showToast('Essence modifiée', 'success');
+        }
+
+        // === UTILS ===
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        function showToast(text, type) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.className = 'toast show ' + type;
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        // Handle back button
+        window.onpopstate = function() {
+            if (!window.location.hash && currentEssence) {
+                showListe();
+            }
+        };
+    </script>
+</body>
+</html>
