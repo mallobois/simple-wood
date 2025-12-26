@@ -1211,7 +1211,7 @@ def api_update_user():
     if spreadsheet is None:
         return jsonify({'success': False, 'message': 'Google Sheets non connecté'})
     data = request.json
-    uid = data.get('id', '').strip().lower()
+    uid = data.get('id', '').strip()
     password = data.get('password', '')
     if password and (len(password) < 6 or len(password) > 8 or not password.isdigit()):
         return jsonify({'success': False, 'message': 'PIN: 6 à 8 chiffres'})
@@ -1219,7 +1219,7 @@ def api_update_user():
         sheet = spreadsheet.worksheet('Utilisateurs')
         records = sheet.get_all_records()
         for i, row in enumerate(records):
-            if row.get('Identifiant') == uid:
+            if str(row.get('Identifiant', '')).lower() == uid.lower():
                 row_num = i + 2
                 sheet.update_cell(row_num, 3, data.get('nom', ''))
                 sheet.update_cell(row_num, 4, data.get('initiales', ''))
@@ -1241,7 +1241,7 @@ def api_delete_user(uid):
         sheet = spreadsheet.worksheet('Utilisateurs')
         records = sheet.get_all_records()
         for i, row in enumerate(records):
-            if row.get('Identifiant') == uid:
+            if str(row.get('Identifiant', '')).lower() == uid.lower():
                 sheet.delete_rows(i + 2)
                 return jsonify({'success': True})
         return jsonify({'success': False, 'message': 'Non trouvé'})
