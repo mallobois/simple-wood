@@ -45,17 +45,19 @@
         .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
         .btn-secondary:hover { background: var(--border); }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-icon { width: 30px; height: 30px; padding: 0; background: var(--bg); border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; }
+        .btn-icon { width: 32px; height: 32px; padding: 0; background: var(--bg); border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; }
         .btn-icon:hover { background: var(--border); }
         .btn-icon.delete:hover { background: var(--danger); color: white; }
         .btn-full { width: 100%; padding: 0.75rem; margin-top: 0.75rem; }
+        .btn-sm { padding: 0.375rem 0.625rem; font-size: 0.8rem; }
         
         /* Modal */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
         .modal.show { display: flex; }
         .modal-content { background: var(--card); border-radius: 16px; padding: 1.25rem; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
-        .modal-content.wide { max-width: 640px; }
-        .modal h3 { font-size: 1.1rem; margin-bottom: 1.25rem; }
+        .modal-content.wide { max-width: 900px; }
+        .modal-content.full { max-width: 95vw; max-height: 95vh; }
+        .modal h3 { font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
         .modal-actions { display: flex; gap: 0.625rem; margin-top: 1.25rem; }
         .modal-actions .btn { flex: 1; }
         
@@ -64,22 +66,89 @@
         .form-group input, .form-group select { width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
         
         .postes-checkboxes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
         .poste-checkbox { display: flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.625rem; background: var(--bg); border-radius: 6px; font-size: 0.85rem; }
         .poste-checkbox input { width: 16px; height: 16px; }
         
-        /* Table values */
-        .values-list { max-height: 50vh; overflow-y: auto; margin-bottom: 1rem; }
-        .value-card { background: var(--bg); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.5rem; }
-        .value-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .value-card-id { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
-        .value-card-fields { display: grid; gap: 0.375rem; }
-        .value-field { display: flex; flex-direction: column; gap: 0.125rem; }
-        .value-field label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
-        .value-field input, .value-field select { padding: 0.375rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem; }
-        .add-value-card { background: #eff6ff; border: 2px dashed var(--primary); border-radius: 8px; padding: 0.75rem; }
-        .add-value-card h4 { font-size: 0.75rem; color: var(--primary); margin-bottom: 0.5rem; }
+        /* ============================================
+           TABLE VALUES - NOUVELLE INTERFACE
+           ============================================ */
+        
+        .values-header { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+        .values-search { flex: 1; min-width: 200px; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+        .values-search:focus { outline: none; border-color: var(--primary); }
+        .values-count { font-size: 0.8rem; color: var(--text-muted); }
+        
+        /* Table view (desktop) */
+        .values-table-wrapper { overflow-x: auto; margin: 0 -1.25rem; padding: 0 1.25rem; }
+        .values-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; display: none; }
+        .values-table th, .values-table td { padding: 0.5rem 0.625rem; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        .values-table th { background: var(--bg); font-weight: 600; font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); position: sticky; top: 0; }
+        .values-table tr:hover { background: #f8fafc; }
+        .values-table td:first-child { font-weight: 600; color: var(--primary); }
+        .color-preview { display: inline-flex; align-items: center; gap: 0.375rem; }
+        .color-swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--border); flex-shrink: 0; }
+        .img-thumb { width: 32px; height: 32px; object-fit: cover; border-radius: 4px; cursor: pointer; }
+        .img-thumb:hover { transform: scale(3); position: relative; z-index: 10; }
+        
+        /* Card view (mobile) */
+        .values-cards { display: flex; flex-direction: column; gap: 0.5rem; }
+        .value-card { background: var(--bg); border-radius: 10px; padding: 0.75rem; cursor: pointer; transition: all 0.15s; }
+        .value-card:hover { background: #e8ecf0; }
+        .value-card-main { display: flex; align-items: center; gap: 0.75rem; }
+        .value-card-color { width: 40px; height: 40px; border-radius: 8px; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.15); flex-shrink: 0; }
+        .value-card-info { flex: 1; min-width: 0; }
+        .value-card-title { font-weight: 600; font-size: 0.95rem; }
+        .value-card-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+        .value-card-badges { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.375rem; }
+        .value-card-badge { font-size: 0.65rem; padding: 0.15rem 0.375rem; background: white; border-radius: 4px; color: var(--text-muted); }
+        .value-card-actions { display: flex; gap: 0.25rem; }
+        
+        /* Edit Modal - Grouped Fields */
+        .field-group { margin-bottom: 1rem; }
+        .field-group-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 0.5rem; padding-bottom: 0.375rem; border-bottom: 2px solid var(--primary); display: flex; align-items: center; gap: 0.375rem; }
+        .field-grid { display: grid; gap: 0.5rem; }
+        .field-grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .field-grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .field-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        
+        .field { display: flex; flex-direction: column; gap: 0.25rem; }
+        .field label { font-size: 0.65rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; }
+        .field input, .field select { padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+        .field input:focus, .field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1); }
+        .field-color { display: flex; gap: 0.5rem; align-items: flex-end; }
+        .field-color input[type="text"] { flex: 1; }
+        .field-color input[type="color"] { width: 40px; height: 38px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+        
+        .preview-section { display: flex; gap: 1rem; align-items: flex-start; padding: 0.75rem; background: var(--bg); border-radius: 8px; margin-top: 0.5rem; }
+        .preview-color { width: 60px; height: 60px; border-radius: 8px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .preview-image { max-width: 120px; max-height: 80px; border-radius: 6px; object-fit: cover; }
+        .preview-info { flex: 1; font-size: 0.8rem; color: var(--text-muted); }
+        
+        /* Responsive */
+        @media (min-width: 768px) {
+            .values-table { display: table; }
+            .values-cards { display: none; }
+            .modal-content.wide { padding: 1.5rem; }
+            .field-grid-2 { grid-template-columns: repeat(2, 1fr); }
+            .field-grid-3 { grid-template-columns: repeat(3, 1fr); }
+            .field-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (max-width: 767px) {
+            .values-table { display: none; }
+            .values-cards { display: flex; }
+            .field-grid-2, .field-grid-3, .field-grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .modal-content.wide { padding: 1rem; }
+        }
+        @media (max-width: 400px) {
+            .field-grid-2, .field-grid-3, .field-grid-4 { grid-template-columns: 1fr; }
+        }
+        
+        /* Sync button */
+        .sync-btn { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; }
+        .sync-btn:hover { background: linear-gradient(135deg, #047857 0%, #059669 100%); }
     </style>
 </head>
 <body>
@@ -126,14 +195,46 @@
         </div>
     </main>
 
-    <!-- Modal Values -->
+    <!-- Modal Values (liste) -->
     <div class="modal" id="values-modal">
-        <div class="modal-content wide">
-            <h3 id="values-modal-title">Valeurs</h3>
-            <div class="values-list" id="values-list"></div>
-            <div class="add-value-card" id="add-value-card"></div>
+        <div class="modal-content full">
+            <h3>
+                <span id="values-modal-title">Valeurs</span>
+                <span class="values-count" id="values-count"></span>
+            </h3>
+            
+            <div class="values-header">
+                <input type="text" class="values-search" id="values-search" placeholder="🔍 Rechercher..." oninput="filterValues()">
+                <button class="btn btn-primary btn-sm" onclick="openEditModal(null)">+ Ajouter</button>
+                <button class="btn sync-btn btn-sm" id="sync-btn" style="display:none;" onclick="syncTable()">🔄 Sync</button>
+            </div>
+            
+            <!-- Table (desktop) -->
+            <div class="values-table-wrapper">
+                <table class="values-table" id="values-table">
+                    <thead id="values-thead"></thead>
+                    <tbody id="values-tbody"></tbody>
+                </table>
+            </div>
+            
+            <!-- Cards (mobile) -->
+            <div class="values-cards" id="values-cards"></div>
+            
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeValuesModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit (édition d'une valeur) -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-content wide">
+            <h3 id="edit-modal-title">Modifier</h3>
+            <div id="edit-form"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeEditModal()">Annuler</button>
+                <button class="btn btn-danger" id="edit-delete-btn" onclick="deleteCurrentRow()" style="display:none;">Supprimer</button>
+                <button class="btn btn-primary" onclick="saveRow()">Enregistrer</button>
             </div>
         </div>
     </div>
@@ -226,9 +327,28 @@
 
     <script>
         let printers=[], postes=[], users=[], tables=[];
-        let currentTable=null, currentTableValues=[], refTableValues={};
-        let editingPrinter=null, editingPoste=null, editingUser=null;
+        let currentTable=null, currentTableValues=[], filteredValues=[], refTableValues={};
+        let editingPrinter=null, editingPoste=null, editingUser=null, editingRowId=null;
         let deleteType=null, deleteId=null;
+
+        // Groupes de champs pour l'édition des essences
+        const FIELD_GROUPS = {
+            essences: [
+                { title: '🏷️ Identification', icon: '🏷️', fields: ['code', 'nom', 'nom_latin', 'nom_en', 'nom_de'], cols: 3 },
+                { title: '⚖️ Densités', icon: '⚖️', fields: ['densite_frais', 'densite_sec'], cols: 2 },
+                { title: '📐 Retrait', icon: '📐', fields: ['psf', 'retrait_t', 'retrait_r', 'ratio_t_r'], cols: 4 },
+                { title: '🌡️ Séchage', icon: '🌡️', fields: ['temp_max', 'risque_fentes', 'risque_collapse', 'duree_27mm'], cols: 4 },
+                { title: '🔧 Usinage', icon: '🔧', fields: ['durete', 'fil', 'grain'], cols: 3 },
+                { title: '🛡️ Durabilité', icon: '🛡️', fields: ['durabilite', 'impregnabilite', 'aubier'], cols: 3 },
+                { title: '🎨 Aspect', icon: '🎨', fields: ['couleur', 'couleur_hex', 'image_url'], cols: 1 }
+            ]
+        };
+
+        // Colonnes principales à afficher dans la table
+        const MAIN_COLUMNS = {
+            essences: ['Code', 'Nom', 'Densité sec', 'PSF %', 'Retrait T %', 'Ratio T/R', 'Temp max °C', 'Dureté Monnin', 'Couleur hex'],
+            default: null // toutes les colonnes
+        };
 
         document.addEventListener('DOMContentLoaded', loadAll);
 
@@ -244,11 +364,11 @@
                     <div class="item-icon">📋</div>
                     <div class="item-info">
                         <div class="item-name">${t.nom}</div>
-                        <div class="item-detail">${(t.colonnes||[]).map(c=>c.nom).join(', ')}</div>
+                        <div class="item-detail">${(t.colonnes||[]).length} colonnes</div>
                     </div>
                     <div class="item-actions">
-                        <button class="btn-icon" onclick="openValuesModal('${t.id}')">📝</button>
-                        <button class="btn-icon delete" onclick="deleteItem('table','${t.id}')">🗑️</button>
+                        <button class="btn-icon" onclick="openValuesModal('${t.id}')" title="Gérer les valeurs">📝</button>
+                        <button class="btn-icon delete" onclick="deleteItem('table','${t.id}')" title="Supprimer">🗑️</button>
                     </div>
                 </li>
             `).join('');
@@ -276,12 +396,19 @@
             else showToast(r.message,'error');
         }
 
-        // === VALUES ===
+        // === VALUES LIST ===
         async function openValuesModal(tableId) {
             currentTable = tables.find(t => t.id === tableId);
             if (!currentTable) return;
-            document.getElementById('values-modal-title').textContent = currentTable.nom;
             
+            document.getElementById('values-modal-title').textContent = currentTable.nom;
+            document.getElementById('values-search').value = '';
+            
+            // Bouton sync pour essences/epaisseurs
+            const syncBtn = document.getElementById('sync-btn');
+            syncBtn.style.display = ['essences', 'epaisseurs'].includes(tableId) ? 'inline-flex' : 'none';
+            
+            // Charger les refs
             refTableValues = {};
             for (const col of (currentTable.colonnes || [])) {
                 if (col.type === 'ref' && col.ref_table) {
@@ -290,100 +417,317 @@
             }
             
             currentTableValues = await (await fetch('/api/tables/' + currentTable.id + '/values')).json();
+            filteredValues = [...currentTableValues];
+            
+            renderValuesTable();
             renderValuesCards();
+            updateCount();
+            
             document.getElementById('values-modal').classList.add('show');
         }
-        function closeValuesModal() { document.getElementById('values-modal').classList.remove('show'); currentTable = null; }
-
-        function renderValuesCards() {
-            const cols = currentTable.colonnes || [{id:'valeur', nom:'Valeur', type:'text'}];
-            
-            document.getElementById('values-list').innerHTML = currentTableValues.map(row => `
-                <div class="value-card" data-id="${row.ID}">
-                    <div class="value-card-header">
-                        <span class="value-card-id">#${row.ID}</span>
-                        <button class="btn-icon delete" onclick="deleteRow(${row.ID})">🗑️</button>
-                    </div>
-                    <div class="value-card-fields" style="grid-template-columns: repeat(${Math.min(cols.length, 3)}, 1fr);">
-                        ${cols.map(c => `
-                            <div class="value-field">
-                                <label>${c.nom}</label>
-                                ${renderInput(c, row[c.nom] || '', row.ID)}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('') || '<p style="color:var(--text-muted);text-align:center;padding:1rem;">Aucune valeur</p>';
-            
-            document.getElementById('add-value-card').innerHTML = `
-                <h4>+ Ajouter</h4>
-                <div class="value-card-fields" style="grid-template-columns: repeat(${Math.min(cols.length, 3)}, 1fr); margin-bottom:0.5rem;">
-                    ${cols.map(c => `
-                        <div class="value-field">
-                            <label>${c.nom}</label>
-                            ${renderInput(c, '', 'new')}
-                        </div>
-                    `).join('')}
-                </div>
-                <button class="btn btn-primary" onclick="addRow()">Ajouter</button>
-            `;
+        
+        function closeValuesModal() { 
+            document.getElementById('values-modal').classList.remove('show'); 
+            currentTable = null; 
         }
 
-        function renderInput(col, value, rowId) {
-            const id = `field-${rowId}-${col.id}`;
+        function filterValues() {
+            const q = document.getElementById('values-search').value.toLowerCase().trim();
+            if (!q) {
+                filteredValues = [...currentTableValues];
+            } else {
+                filteredValues = currentTableValues.filter(row => 
+                    Object.values(row).some(v => String(v).toLowerCase().includes(q))
+                );
+            }
+            renderValuesTable();
+            renderValuesCards();
+            updateCount();
+        }
+
+        function updateCount() {
+            const total = currentTableValues.length;
+            const shown = filteredValues.length;
+            document.getElementById('values-count').textContent = shown === total ? `(${total})` : `(${shown}/${total})`;
+        }
+
+        function renderValuesTable() {
+            const cols = currentTable.colonnes || [];
+            const mainCols = MAIN_COLUMNS[currentTable.id] || cols.map(c => c.nom);
+            const visibleCols = cols.filter(c => mainCols.includes(c.nom));
+            
+            document.getElementById('values-thead').innerHTML = `
+                <tr>
+                    ${visibleCols.map(c => `<th>${c.nom}</th>`).join('')}
+                    <th style="width:60px;"></th>
+                </tr>
+            `;
+            
+            document.getElementById('values-tbody').innerHTML = filteredValues.map(row => `
+                <tr onclick="openEditModal(${row.ID})" style="cursor:pointer;">
+                    ${visibleCols.map(c => {
+                        const val = row[c.nom] || '';
+                        if (c.id === 'couleur_hex' && val) {
+                            return `<td><span class="color-preview"><span class="color-swatch" style="background:${val}"></span>${val}</span></td>`;
+                        }
+                        if (c.id === 'image_url' && val) {
+                            return `<td><img src="${val}" class="img-thumb" onerror="this.style.display='none'"></td>`;
+                        }
+                        return `<td>${val}</td>`;
+                    }).join('')}
+                    <td>
+                        <button class="btn-icon delete" onclick="event.stopPropagation();deleteRow(${row.ID})" title="Supprimer">🗑️</button>
+                    </td>
+                </tr>
+            `).join('') || '<tr><td colspan="99" style="text-align:center;color:var(--text-muted);padding:2rem;">Aucune donnée</td></tr>';
+        }
+
+        function renderValuesCards() {
+            const cols = currentTable.colonnes || [];
+            const codeCol = cols.find(c => c.id === 'code');
+            const nomCol = cols.find(c => c.id === 'nom');
+            const latinCol = cols.find(c => c.id === 'nom_latin');
+            const colorCol = cols.find(c => c.id === 'couleur_hex');
+            
+            document.getElementById('values-cards').innerHTML = filteredValues.map(row => {
+                const code = codeCol ? row[codeCol.nom] || '' : '';
+                const nom = nomCol ? row[nomCol.nom] || '' : Object.values(row)[1] || '';
+                const latin = latinCol ? row[latinCol.nom] || '' : '';
+                const color = colorCol ? row[colorCol.nom] || '#ccc' : '#667eea';
+                
+                // Badges avec quelques infos clés
+                const badges = [];
+                if (row['Densité sec']) badges.push(`${row['Densité sec']} kg/m³`);
+                if (row['Dureté Monnin']) badges.push(`Dureté ${row['Dureté Monnin']}`);
+                if (row['Durabilité']) badges.push(`Classe ${row['Durabilité']}`);
+                
+                return `
+                    <div class="value-card" onclick="openEditModal(${row.ID})">
+                        <div class="value-card-main">
+                            <div class="value-card-color" style="background:${color}"></div>
+                            <div class="value-card-info">
+                                <div class="value-card-title">${code ? code + ' · ' : ''}${nom}</div>
+                                <div class="value-card-subtitle">${latin}</div>
+                                ${badges.length ? `<div class="value-card-badges">${badges.map(b => `<span class="value-card-badge">${b}</span>`).join('')}</div>` : ''}
+                            </div>
+                            <div class="value-card-actions">
+                                <button class="btn-icon delete" onclick="event.stopPropagation();deleteRow(${row.ID})">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('') || '<p style="text-align:center;color:var(--text-muted);padding:2rem;">Aucune donnée</p>';
+        }
+
+        // === EDIT MODAL ===
+        function openEditModal(rowId) {
+            editingRowId = rowId;
+            const row = rowId ? currentTableValues.find(r => r.ID === rowId) : {};
+            const cols = currentTable.colonnes || [];
+            const groups = FIELD_GROUPS[currentTable.id];
+            
+            document.getElementById('edit-modal-title').textContent = rowId ? `Modifier #${rowId}` : 'Ajouter';
+            document.getElementById('edit-delete-btn').style.display = rowId ? 'block' : 'none';
+            
+            let html = '';
+            
+            if (groups) {
+                // Affichage groupé
+                for (const group of groups) {
+                    const groupCols = cols.filter(c => group.fields.includes(c.id));
+                    if (groupCols.length === 0) continue;
+                    
+                    html += `<div class="field-group">`;
+                    html += `<div class="field-group-title">${group.title}</div>`;
+                    
+                    if (group.fields.includes('couleur_hex')) {
+                        // Section spéciale pour les couleurs
+                        html += `<div class="field-grid field-grid-2">`;
+                        for (const col of groupCols) {
+                            const val = row[col.nom] || '';
+                            if (col.id === 'couleur_hex') {
+                                html += `
+                                    <div class="field">
+                                        <label>${col.nom}</label>
+                                        <div class="field-color">
+                                            <input type="text" id="edit-${col.id}" value="${val}" placeholder="#D4A574">
+                                            <input type="color" value="${val || '#D4A574'}" onchange="document.getElementById('edit-${col.id}').value=this.value">
+                                        </div>
+                                    </div>
+                                `;
+                            } else if (col.id === 'image_url') {
+                                html += `
+                                    <div class="field">
+                                        <label>${col.nom}</label>
+                                        <input type="text" id="edit-${col.id}" value="${val}" placeholder="https://...">
+                                    </div>
+                                `;
+                            } else {
+                                html += renderField(col, val);
+                            }
+                        }
+                        html += `</div>`;
+                        // Preview
+                        const colorVal = row['Couleur hex'] || '#ccc';
+                        const imgVal = row['Image URL'] || '';
+                        html += `
+                            <div class="preview-section">
+                                <div class="preview-color" id="preview-color" style="background:${colorVal}"></div>
+                                ${imgVal ? `<img src="${imgVal}" class="preview-image" id="preview-image" onerror="this.style.display='none'">` : '<div id="preview-image"></div>'}
+                                <div class="preview-info">Aperçu de la couleur et de l'image</div>
+                            </div>
+                        `;
+                    } else {
+                        html += `<div class="field-grid field-grid-${group.cols}">`;
+                        for (const col of groupCols) {
+                            html += renderField(col, row[col.nom] || '');
+                        }
+                        html += `</div>`;
+                    }
+                    html += `</div>`;
+                }
+            } else {
+                // Affichage simple en grille
+                html += `<div class="field-grid field-grid-3">`;
+                for (const col of cols) {
+                    html += renderField(col, row[col.nom] || '');
+                }
+                html += `</div>`;
+            }
+            
+            document.getElementById('edit-form').innerHTML = html;
+            
+            // Live preview pour couleur
+            const colorInput = document.getElementById('edit-couleur_hex');
+            if (colorInput) {
+                colorInput.addEventListener('input', () => {
+                    const preview = document.getElementById('preview-color');
+                    if (preview) preview.style.background = colorInput.value || '#ccc';
+                });
+            }
+            const imgInput = document.getElementById('edit-image_url');
+            if (imgInput) {
+                imgInput.addEventListener('change', () => {
+                    let preview = document.getElementById('preview-image');
+                    if (imgInput.value) {
+                        if (preview.tagName !== 'IMG') {
+                            const img = document.createElement('img');
+                            img.id = 'preview-image';
+                            img.className = 'preview-image';
+                            preview.replaceWith(img);
+                            preview = img;
+                        }
+                        preview.src = imgInput.value;
+                    }
+                });
+            }
+            
+            document.getElementById('edit-modal').classList.add('show');
+        }
+        
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('show');
+            editingRowId = null;
+        }
+
+        function renderField(col, value) {
+            const id = `edit-${col.id}`;
+            
             if (col.type === 'ref' && col.ref_table) {
                 const refs = refTableValues[col.ref_table] || [];
                 const refCol = col.ref_col || 'nom';
-                return `<select id="${id}" data-col="${col.id}" onchange="updateRow(${rowId})">
-                    <option value="">—</option>
-                    ${refs.map(r => {
-                        const v = r[refCol] || r['Nom'] || r['Valeur'] || '';
-                        return `<option value="${v}" ${v===value?'selected':''}>${v}</option>`;
-                    }).join('')}
-                </select>`;
+                return `
+                    <div class="field">
+                        <label>${col.nom}</label>
+                        <select id="${id}">
+                            <option value="">—</option>
+                            ${refs.map(r => {
+                                const v = r[refCol] || r['Nom'] || r['Valeur'] || '';
+                                return `<option value="${v}" ${v===value?'selected':''}>${v}</option>`;
+                            }).join('')}
+                        </select>
+                    </div>
+                `;
             }
+            
             const type = col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text';
-            return `<input type="${type}" id="${id}" data-col="${col.id}" value="${value}" onchange="updateRow(${rowId})">`;
+            const step = col.type === 'number' ? 'step="any"' : '';
+            return `
+                <div class="field">
+                    <label>${col.nom}</label>
+                    <input type="${type}" id="${id}" value="${value}" ${step}>
+                </div>
+            `;
         }
 
-        async function addRow() {
+        async function saveRow() {
             const cols = currentTable.colonnes || [];
             const data = {};
             let hasValue = false;
+            
             cols.forEach(c => {
-                const el = document.getElementById('field-new-' + c.id);
-                if (el) { data[c.id] = el.value.trim(); if (data[c.id]) hasValue = true; }
+                const el = document.getElementById('edit-' + c.id);
+                if (el) { 
+                    data[c.id] = el.value.trim(); 
+                    if (data[c.id]) hasValue = true; 
+                }
             });
-            if (!hasValue) return;
-            await fetch('/api/tables/' + currentTable.id + '/values', {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify(data)
-            });
+            
+            if (!hasValue) {
+                showToast('Remplissez au moins un champ', 'error');
+                return;
+            }
+            
+            if (editingRowId) {
+                await fetch('/api/tables/' + currentTable.id + '/values/' + editingRowId, {
+                    method: 'PUT',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(data)
+                });
+                showToast('Modifié', 'success');
+            } else {
+                await fetch('/api/tables/' + currentTable.id + '/values', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(data)
+                });
+                showToast('Ajouté', 'success');
+            }
+            
+            closeEditModal();
             currentTableValues = await (await fetch('/api/tables/' + currentTable.id + '/values')).json();
-            renderValuesCards();
-        }
-
-        async function updateRow(rowId) {
-            if (rowId === 'new') return;
-            const cols = currentTable.colonnes || [];
-            const card = document.querySelector(`.value-card[data-id="${rowId}"]`);
-            const data = {};
-            cols.forEach(c => {
-                const el = card.querySelector(`[data-col="${c.id}"]`);
-                if (el) data[c.id] = el.value;
-            });
-            await fetch('/api/tables/' + currentTable.id + '/values/' + rowId, {
-                method: 'PUT',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify(data)
-            });
+            filterValues();
         }
 
         async function deleteRow(rowId) {
+            if (!confirm('Supprimer cette entrée ?')) return;
             await fetch('/api/tables/' + currentTable.id + '/values/' + rowId, { method: 'DELETE' });
+            showToast('Supprimé', 'success');
             currentTableValues = await (await fetch('/api/tables/' + currentTable.id + '/values')).json();
-            renderValuesCards();
+            filterValues();
+        }
+
+        function deleteCurrentRow() {
+            if (editingRowId) {
+                deleteRow(editingRowId);
+                closeEditModal();
+            }
+        }
+
+        async function syncTable() {
+            if (!confirm(`Resynchroniser toutes les ${currentTable.nom} depuis le code source ?\n\nCette action va remplacer TOUTES les données existantes.`)) return;
+            
+            showToast('Synchronisation en cours...', 'success');
+            const endpoint = currentTable.id === 'essences' ? '/api/essences/sync' : '/api/epaisseurs/sync';
+            const r = await (await fetch(endpoint, { method: 'POST' })).json();
+            
+            if (r.success) {
+                showToast(r.message, 'success');
+                currentTableValues = await (await fetch('/api/tables/' + currentTable.id + '/values')).json();
+                filterValues();
+            } else {
+                showToast(r.message, 'error');
+            }
         }
 
         // === PRINTERS ===
