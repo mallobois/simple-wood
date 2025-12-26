@@ -1100,10 +1100,13 @@ def index():
     config = load_config()
     user_postes = session.get('user_postes', [])
     is_admin = session.get('user_droits') == 'admin'
-    if is_admin or not user_postes:
+    
+    # Admin voit tous les postes, opérateur uniquement les siens
+    if is_admin:
         postes = config.get('postes', [])
     else:
         postes = [p for p in config.get('postes', []) if p['id'] in user_postes]
+    
     return render_template('index.html', user=session.get('user_nom', ''), droits=session.get('user_droits', 'operateur'), postes=postes)
 
 
@@ -1118,10 +1121,18 @@ def page_poste(poste_id):
     poste = get_poste(config, poste_id)
     if not poste:
         return redirect(url_for('index'))
+    
     user_postes = session.get('user_postes', [])
     is_admin = session.get('user_droits') == 'admin'
-    if not is_admin and user_postes and poste_id not in user_postes:
+    
+    # Vérifier les droits : admin OK, sinon vérifier que le poste est autorisé
+    if not is_admin and poste_id not in user_postes:
         return redirect(url_for('index'))
+    
+    # Templates spécifiques par poste
+    if poste_id == 'achats':
+        return render_template('poste_achats.html', poste=poste)
+    
     return render_template('poste_tache.html', poste=poste, printers=config.get('printers', []))
 
 

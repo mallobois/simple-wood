@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achats et réception - WoodStock</title>
+    <style>
+        :root {
+            --bg: #f8f9fa; --card: #ffffff; --text: #1a1a2e; --text-muted: #6c757d;
+            --primary: #2563eb; --success: #059669; --danger: #dc2626; --warning: #d97706;
+            --border: #e5e7eb; --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100dvh; }
+        
+        header { background: var(--card); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; position: sticky; top: 0; z-index: 50; }
+        .back { color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+        header h1 { font-size: 1rem; font-weight: 600; flex: 1; }
+        
+        .toast { position: fixed; top: 4rem; left: 50%; transform: translateX(-50%) translateY(-20px); padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.9rem; font-weight: 500; opacity: 0; transition: all 0.3s; z-index: 100; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--danger); color: white; }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 1rem; }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; background: var(--card); padding: 0.5rem; border-radius: var(--radius); }
+        .tab { flex: 1; padding: 0.75rem; border: none; background: transparent; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; color: var(--text-muted); }
+        .tab.active { background: var(--primary); color: white; }
+        
+        /* Card */
+        .card { background: var(--card); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+        .card-title { font-size: 1rem; font-weight: 600; }
+        
+        /* Liste */
+        .list-item { display: flex; align-items: center; padding: 0.75rem; background: var(--bg); border-radius: 8px; margin-bottom: 0.5rem; gap: 0.75rem; }
+        .list-item:last-child { margin-bottom: 0; }
+        .list-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+        .list-info { flex: 1; min-width: 0; }
+        .list-title { font-weight: 600; font-size: 0.95rem; }
+        .list-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+        .list-actions { display: flex; gap: 0.25rem; }
+        
+        .btn { padding: 0.5rem 0.875rem; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .btn-sm { padding: 0.375rem 0.625rem; font-size: 0.8rem; }
+        .btn-icon { width: 32px; height: 32px; padding: 0; background: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; }
+        .btn-icon:hover { background: var(--border); }
+        .btn-icon.delete:hover { background: var(--danger); color: white; }
+        
+        .empty { text-align: center; padding: 2rem; color: var(--text-muted); }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--card); border-radius: 16px; padding: 1.25rem; width: 100%; max-width: 400px; }
+        .modal h3 { font-size: 1.1rem; margin-bottom: 1rem; }
+        .modal-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+        .modal-actions .btn { flex: 1; }
+        
+        .form-group { margin-bottom: 0.75rem; }
+        .form-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+        
+        /* Stats */
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+        .stat { background: var(--card); border-radius: var(--radius); padding: 1rem; text-align: center; box-shadow: var(--shadow); }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+        
+        @media (max-width: 500px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="back">← Accueil</a>
+        <h1>Achats et réception</h1>
+    </header>
+
+    <div id="toast" class="toast"></div>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="stat-forets">0</div>
+                <div class="stat-label">Forêts</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-lots">0</div>
+                <div class="stat-label">Lots</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-volume">0</div>
+                <div class="stat-label">m³ total</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('forets')">🌲 Forêts</button>
+            <button class="tab" onclick="showTab('lots')">📦 Lots</button>
+        </div>
+
+        <!-- Forêts -->
+        <div id="tab-forets" class="card">
+            <div class="card-header">
+                <span class="card-title">Forêts</span>
+                <button class="btn btn-primary btn-sm" onclick="openForetModal()">+ Ajouter</button>
+            </div>
+            <div id="forets-list"></div>
+        </div>
+
+        <!-- Lots -->
+        <div id="tab-lots" class="card" style="display:none;">
+            <div class="card-header">
+                <span class="card-title">Lots d'achat</span>
+                <button class="btn btn-primary btn-sm" onclick="openLotModal()">+ Ajouter</button>
+            </div>
+            <div id="lots-list"></div>
+        </div>
+    </div>
+
+    <!-- Modal Forêt -->
+    <div class="modal" id="modal-foret">
+        <div class="modal-content">
+            <h3 id="modal-foret-title">Ajouter une forêt</h3>
+            <div class="form-group">
+                <label>Code</label>
+                <input type="text" id="foret-code" placeholder="FD-HAGUENAU">
+            </div>
+            <div class="form-group">
+                <label>Nom</label>
+                <input type="text" id="foret-nom" placeholder="Forêt de Haguenau">
+            </div>
+            <div class="form-group">
+                <label>Département</label>
+                <input type="text" id="foret-departement" placeholder="67 - Bas-Rhin">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('modal-foret')">Annuler</button>
+                <button class="btn btn-primary" onclick="saveForet()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Lot -->
+    <div class="modal" id="modal-lot">
+        <div class="modal-content">
+            <h3 id="modal-lot-title">Ajouter un lot</h3>
+            <div class="form-group">
+                <label>Numéro de lot</label>
+                <input type="text" id="lot-numero" placeholder="2025-001">
+            </div>
+            <div class="form-group">
+                <label>Forêt</label>
+                <select id="lot-foret"></select>
+            </div>
+            <div class="form-group">
+                <label>Date d'achat</label>
+                <input type="date" id="lot-date">
+            </div>
+            <div class="form-group">
+                <label>Volume (m³)</label>
+                <input type="number" id="lot-volume" placeholder="150" step="0.1">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('modal-lot')">Annuler</button>
+                <button class="btn btn-primary" onclick="saveLot()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let forets = [], lots = [];
+        let editingForetId = null, editingLotId = null;
+
+        document.addEventListener('DOMContentLoaded', loadAll);
+
+        async function loadAll() {
+            [forets, lots] = await Promise.all([
+                fetch('/api/tables/forets/values').then(r => r.json()),
+                fetch('/api/tables/lots/values').then(r => r.json())
+            ]);
+            renderForets();
+            renderLots();
+            updateStats();
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[onclick="showTab('${tab}')"]`).classList.add('active');
+            document.getElementById('tab-forets').style.display = tab === 'forets' ? 'block' : 'none';
+            document.getElementById('tab-lots').style.display = tab === 'lots' ? 'block' : 'none';
+        }
+
+        function updateStats() {
+            document.getElementById('stat-forets').textContent = forets.length;
+            document.getElementById('stat-lots').textContent = lots.length;
+            const totalVolume = lots.reduce((sum, l) => sum + (parseFloat(l['Volume m³']) || 0), 0);
+            document.getElementById('stat-volume').textContent = totalVolume.toFixed(0);
+        }
+
+        // === FORÊTS ===
+        function renderForets() {
+            if (forets.length === 0) {
+                document.getElementById('forets-list').innerHTML = '<div class="empty">Aucune forêt enregistrée</div>';
+                return;
+            }
+            document.getElementById('forets-list').innerHTML = forets.map(f => `
+                <div class="list-item">
+                    <div class="list-icon">🌲</div>
+                    <div class="list-info">
+                        <div class="list-title">${f['Code'] || ''} · ${f['Nom'] || ''}</div>
+                        <div class="list-subtitle">${f['Département'] || ''}</div>
+                    </div>
+                    <div class="list-actions">
+                        <button class="btn-icon" onclick="editForet(${f.ID})">✏️</button>
+                        <button class="btn-icon delete" onclick="deleteForet(${f.ID})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openForetModal(id = null) {
+            editingForetId = id;
+            const f = id ? forets.find(x => x.ID === id) : null;
+            document.getElementById('modal-foret-title').textContent = id ? 'Modifier la forêt' : 'Ajouter une forêt';
+            document.getElementById('foret-code').value = f ? f['Code'] || '' : '';
+            document.getElementById('foret-nom').value = f ? f['Nom'] || '' : '';
+            document.getElementById('foret-departement').value = f ? f['Département'] || '' : '';
+            document.getElementById('modal-foret').classList.add('show');
+        }
+
+        function editForet(id) { openForetModal(id); }
+
+        async function saveForet() {
+            const data = {
+                code: document.getElementById('foret-code').value.trim(),
+                nom: document.getElementById('foret-nom').value.trim(),
+                departement: document.getElementById('foret-departement').value.trim()
+            };
+            if (!data.nom) return showToast('Nom requis', 'error');
+            
+            if (editingForetId) {
+                await fetch('/api/tables/forets/values/' + editingForetId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                showToast('Forêt modifiée', 'success');
+            } else {
+                await fetch('/api/tables/forets/values', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                showToast('Forêt ajoutée', 'success');
+            }
+            closeModal('modal-foret');
+            forets = await fetch('/api/tables/forets/values').then(r => r.json());
+            renderForets();
+            updateStats();
+        }
+
+        async function deleteForet(id) {
+            if (!confirm('Supprimer cette forêt ?')) return;
+            await fetch('/api/tables/forets/values/' + id, { method: 'DELETE' });
+            forets = await fetch('/api/tables/forets/values').then(r => r.json());
+            renderForets();
+            updateStats();
+            showToast('Supprimé', 'success');
+        }
+
+        // === LOTS ===
+        function renderLots() {
+            if (lots.length === 0) {
+                document.getElementById('lots-list').innerHTML = '<div class="empty">Aucun lot enregistré</div>';
+                return;
+            }
+            document.getElementById('lots-list').innerHTML = lots.map(l => `
+                <div class="list-item">
+                    <div class="list-icon" style="background:linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);">📦</div>
+                    <div class="list-info">
+                        <div class="list-title">Lot ${l['Numéro'] || ''}</div>
+                        <div class="list-subtitle">${l['Forêt'] || ''} · ${l['Volume m³'] || 0} m³ · ${l['Date achat'] || ''}</div>
+                    </div>
+                    <div class="list-actions">
+                        <button class="btn-icon" onclick="editLot(${l.ID})">✏️</button>
+                        <button class="btn-icon delete" onclick="deleteLot(${l.ID})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openLotModal(id = null) {
+            editingLotId = id;
+            const l = id ? lots.find(x => x.ID === id) : null;
+            
+            // Populate forêts select
+            document.getElementById('lot-foret').innerHTML = '<option value="">-- Sélectionner --</option>' +
+                forets.map(f => `<option value="${f['Nom']}" ${l && l['Forêt'] === f['Nom'] ? 'selected' : ''}>${f['Nom']}</option>`).join('');
+            
+            document.getElementById('modal-lot-title').textContent = id ? 'Modifier le lot' : 'Ajouter un lot';
+            document.getElementById('lot-numero').value = l ? l['Numéro'] || '' : '';
+            document.getElementById('lot-date').value = l ? l['Date achat'] || '' : new Date().toISOString().split('T')[0];
+            document.getElementById('lot-volume').value = l ? l['Volume m³'] || '' : '';
+            document.getElementById('modal-lot').classList.add('show');
+        }
+
+        function editLot(id) { openLotModal(id); }
+
+        async function saveLot() {
+            const data = {
+                numero: document.getElementById('lot-numero').value.trim(),
+                foret: document.getElementById('lot-foret').value,
+                date_achat: document.getElementById('lot-date').value,
+                volume: document.getElementById('lot-volume').value
+            };
+            if (!data.numero) return showToast('Numéro requis', 'error');
+            
+            if (editingLotId) {
+                await fetch('/api/tables/lots/values/' + editingLotId, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                showToast('Lot modifié', 'success');
+            } else {
+                await fetch('/api/tables/lots/values', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                showToast('Lot ajouté', 'success');
+            }
+            closeModal('modal-lot');
+            lots = await fetch('/api/tables/lots/values').then(r => r.json());
+            renderLots();
+            updateStats();
+        }
+
+        async function deleteLot(id) {
+            if (!confirm('Supprimer ce lot ?')) return;
+            await fetch('/api/tables/lots/values/' + id, { method: 'DELETE' });
+            lots = await fetch('/api/tables/lots/values').then(r => r.json());
+            renderLots();
+            updateStats();
+            showToast('Supprimé', 'success');
+        }
+
+        // === UTILS ===
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        function showToast(text, type) {
+            const t = document.getElementById('toast');
+            t.textContent = text;
+            t.className = 'toast show ' + type;
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+</html>

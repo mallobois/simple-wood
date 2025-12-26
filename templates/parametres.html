@@ -371,8 +371,8 @@
                         </li>
                     `;
                 }
-                // Tables cachées (gérées via page essences)
-                if (t.id === 'epaisseurs' || t.id === 'qualites') {
+                // Tables cachées (gérées via page essences ou poste achats)
+                if (t.id === 'epaisseurs' || t.id === 'qualites' || t.id === 'forets' || t.id === 'lots') {
                     return '';
                 }
                 // Autres tables
