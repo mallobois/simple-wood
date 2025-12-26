@@ -538,14 +538,59 @@ DEFAULT_CONFIG = {
     ],
     'postes': [
         {
-            'id': 'troncons', 'nom': 'Tronçons', 'description': 'Étiquetage des tronçons',
-            'serie': '2501', 'compteur': 0, 'prefixe': 'TRO-', 'printer': 'zebra1',
-            'copies_defaut': 1, 'type_produit': 'TRO', 'champs': []
+            'id': 'achats', 'nom': 'Achats et réception', 'description': 'Gestion des achats et réceptions',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'ACH-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'champs': []
         },
         {
-            'id': 'sciage', 'nom': 'Sciage', 'description': 'Découpe et mise en paquets',
+            'id': 'grumier', 'nom': 'Réception grumier', 'description': 'Réception des grumes',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'GRU-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'type_produit': 'GRU', 'champs': []
+        },
+        {
+            'id': 'tronconnage', 'nom': 'Tronçonnage', 'description': 'Découpe des grumes en tronçons',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'TRO-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'type_produit': 'TRO', 'source_poste': 'grumier', 'champs': []
+        },
+        {
+            'id': 'sciage', 'nom': 'Sciage', 'description': 'Sciage des tronçons',
             'serie': '2501', 'compteur': 0, 'prefixe': 'SCI-', 'printer': 'zebra1',
-            'copies_defaut': 1, 'type_produit': 'PQT', 'source_poste': 'troncons', 'champs': []
+            'copies_defaut': 1, 'type_produit': 'PQT', 'source_poste': 'tronconnage', 'champs': []
+        },
+        {
+            'id': 'paquets', 'nom': 'Paquets', 'description': 'Mise en paquets',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'PQT-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'type_produit': 'PQT', 'source_poste': 'sciage', 'champs': []
+        },
+        {
+            'id': 'sechage', 'nom': 'Séchage', 'description': 'Gestion du séchage',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'SEC-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'type_produit': 'PQT', 'source_poste': 'paquets', 'champs': []
+        },
+        {
+            'id': 'delignage', 'nom': 'Délignage', 'description': 'Délignage des planches',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'DEL-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'type_produit': 'PDB', 'source_poste': 'sechage', 'champs': []
+        },
+        {
+            'id': 'decoupe', 'nom': 'Découpe', 'description': 'Découpe des prédébits',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'DEC-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'type_produit': 'PDB', 'source_poste': 'delignage', 'champs': []
+        },
+        {
+            'id': 'colis', 'nom': 'Colis', 'description': 'Préparation des colis',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'COL-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'champs': []
+        },
+        {
+            'id': 'expeditions', 'nom': 'Expéditions', 'description': 'Gestion des expéditions',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'EXP-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'champs': []
+        },
+        {
+            'id': 'inventaire', 'nom': 'Inventaire', 'description': 'Inventaire du stock',
+            'serie': '2501', 'compteur': 0, 'prefixe': 'INV-', 'printer': 'zebra1',
+            'copies_defaut': 1, 'champs': []
         }
     ],
     'tables': [
