@@ -1,6 +1,6 @@
 # Simple Wood
 
-Système d'étiquetage Zebra pour scierie - MALLO BOIS
+Système d'étiquetage Zebra
 
 ## Installation sur Raspberry Pi
 
@@ -57,4 +57,4 @@ Chaque impression est loguée dans un Google Sheet avec 3 onglets :
 
 ---
 
-ÉTABLISSEMENTS MALLO BOIS SAS — Réguisheim
+
